@@ -1,0 +1,43 @@
+{
+  "name": "mathematics-backend",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "description": "Mathematics Platform — API and Learning Engine",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.js\" \"scripts/**/*.js\" \"eslint.config.js\" \"vitest.config.js\" \"vitest.setup.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"scripts/**/*.js\" \"eslint.config.js\" \"vitest.config.js\" \"vitest.setup.js\"",
+    "prisma:validate": "prisma validate",
+    "prisma:generate": "prisma generate",
+    "verify:knowledge-core": "node scripts/verify-knowledge-core-schema.js",
+    "verify:knowledge-persistence": "node scripts/verify-knowledge-persistence.js",
+    "verify:fraction-seed": "node scripts/verify-fraction-knowledge-seed.js",
+    "test:knowledge-graph": "vitest run src/modules/knowledge-graph",
+    "verify": "node scripts/verify.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.0",
+    "@prisma/client": "^6.19.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3",
+    "vitest": "^3.0.0",
+    "supertest": "^7.0.0",
+    "eslint": "^9.22.0",
+    "@eslint/js": "^9.22.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.0"
+  }
+}

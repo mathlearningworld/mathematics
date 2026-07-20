@@ -1,0 +1,35 @@
+# ──────────────────────────────────────────────────────
+# Mathematics Platform — Development PostgreSQL
+# ──────────────────────────────────────────────────────
+# This file is a reviewed but INACTIVE development definition.
+# It is NOT started automatically.
+#
+# To start: docker compose up -d
+# To stop:  docker compose down
+#
+# Port 5433 is used to avoid conflict with the existing
+# knowledge-db container on port 5432.
+
+services:
+  postgres:
+    image: postgres:18.4
+    container_name: mathematics-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mathematics_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-mathematics}
+    volumes:
+      - mathematics-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mathematics_user} -d ${POSTGRES_DB:-mathematics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mathematics-postgres-data:
+    name: mathematics-postgres-data

@@ -1,0 +1,116 @@
+// ──────────────────────────────────────────────
+// Mathematics Platform — Prisma Schema
+// ──────────────────────────────────────────────
+// This is the single source of truth for the database schema.
+// Knowledge Core v1 — Subject, Concept, Skill, SkillDependency
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────
+
+enum KnowledgeState {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  RETIRED
+
+  @@map("knowledge_state")
+}
+
+enum SkillDependencyKind {
+  REQUIRED
+  SUPPORTING
+
+  @@map("skill_dependency_kind")
+}
+
+// ── Models ───────────────────────────────────
+
+model Subject {
+  id           String         @id @default(uuid()) @db.Uuid
+  code         String         @unique @db.VarChar(50)
+  slug         String         @unique @db.VarChar(120)
+  internalName String         @map("internal_name") @db.VarChar(160)
+  description  String?        @db.Text
+  state        KnowledgeState @default(DRAFT)
+  version      Int            @default(1)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  concepts Concept[]
+
+  @@index([state])
+  @@map("subjects")
+}
+
+model Concept {
+  id                 String         @id @default(uuid()) @db.Uuid
+  subjectId          String         @map("subject_id") @db.Uuid
+  code               String         @unique @db.VarChar(120)
+  slug               String         @db.VarChar(160)
+  internalName       String         @map("internal_name") @db.VarChar(200)
+  semanticDefinition String         @map("semantic_definition") @db.Text
+  boundaryNotes      String?        @map("boundary_notes") @db.Text
+  state              KnowledgeState @default(DRAFT)
+  version            Int            @default(1)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  skills Skill[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId, state])
+  @@map("concepts")
+}
+
+model Skill {
+  id                  String         @id @default(uuid()) @db.Uuid
+  conceptId           String         @map("concept_id") @db.Uuid
+  code                String         @unique @db.VarChar(180)
+  slug                String         @db.VarChar(180)
+  internalName        String         @map("internal_name") @db.VarChar(240)
+  capabilityStatement String         @map("capability_statement") @db.Text
+  observableOutcome   String         @map("observable_outcome") @db.Text
+  state               KnowledgeState @default(DRAFT)
+  version             Int            @default(1)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  dependencies SkillDependency[] @relation("DependentSkill")
+  unlocks      SkillDependency[] @relation("PrerequisiteSkill")
+
+  @@unique([conceptId, slug])
+  @@index([conceptId, state])
+  @@map("skills")
+}
+
+model SkillDependency {
+  id                  String              @id @default(uuid()) @db.Uuid
+  prerequisiteSkillId String              @map("prerequisite_skill_id") @db.Uuid
+  dependentSkillId    String              @map("dependent_skill_id") @db.Uuid
+  kind                SkillDependencyKind @default(REQUIRED)
+  rationale           String              @db.Text
+  state               KnowledgeState      @default(DRAFT)
+  version             Int                 @default(1)
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  prerequisiteSkill Skill @relation("PrerequisiteSkill", fields: [prerequisiteSkillId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  dependentSkill    Skill @relation("DependentSkill", fields: [dependentSkillId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([prerequisiteSkillId, dependentSkillId])
+  @@index([dependentSkillId, kind, state])
+  @@index([prerequisiteSkillId, kind, state])
+  @@map("skill_dependencies")
+}
