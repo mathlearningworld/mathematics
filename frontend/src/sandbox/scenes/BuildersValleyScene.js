@@ -220,14 +220,21 @@ export class BuildersValleyScene extends Phaser.Scene {
         })
         .setOrigin(1, 1);
 
-      const selectSlot = (pointer, localX, localY, event) => {
+      // Keep the visual objects inside the camera-fixed Container, but use one
+      // scene-level screen-space Zone for input. Interactive children inside a
+      // scrolling Container can produce hit areas that drift away from the
+      // rendered slots as the camera follows the player.
+      const hitZone = this.add
+        .zone(camera.width / 2 + x, camera.height - 72, 58, 58)
+        .setScrollFactor(0)
+        .setDepth(10002)
+        .setInteractive({ useHandCursor: true });
+      hitZone.on("pointerdown", (pointer, localX, localY, event) => {
         event?.stopPropagation();
         this._selectHotbarSlot(index);
-      };
-      slot.on("pointerdown", selectSlot);
-      icon.setSize(42, 42).setInteractive({ useHandCursor: true });
-      icon.on("pointerdown", selectSlot);
-      this.hotbarSlots.push({ slot, icon, keyLabel, countLabel, item });
+      });
+
+      this.hotbarSlots.push({ slot, icon, keyLabel, countLabel, hitZone, item });
       hotbar.add([slot, icon, keyLabel, countLabel]);
     });
 
