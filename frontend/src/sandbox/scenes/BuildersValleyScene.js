@@ -10,6 +10,14 @@ import {
 import { resolveMovement } from "../domain/movement.js";
 import { PlayerInput } from "../input/PlayerInput.js";
 
+const HOTBAR_ITEMS = Object.freeze([
+  { id: "hand", kind: "HAND", icon: "✋", held: "" },
+  { id: "wood", kind: "BLOCK", icon: "▤", held: "▤" },
+  { id: "stone", kind: "BLOCK", icon: "◆", held: "◆" },
+  { id: "measure", kind: "TOOL", icon: "╱", held: "╱" },
+  { id: "cut", kind: "TOOL", icon: "✂", held: "✂" },
+]);
+
 const COLORS = Object.freeze({
   grass: 0x5f9f55,
   grassAlt: 0x6eae61,
@@ -29,6 +37,10 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.player = null;
     this.playerInput = null;
     this.obstacles = null;
+    this.hotbarSlots = [];
+    this.hotbarKeys = [];
+    this.selectedSlot = 0;
+    this.heldItemLabel = null;
   }
 
   create() {
@@ -51,6 +63,10 @@ export class BuildersValleyScene extends Phaser.Scene {
     window.__BUILDERS_VALLEY__ = {
       scene: this,
       getPlayerPosition: () => ({ x: this.player.x, y: this.player.y }),
+      getSelectedSlot: () => ({
+        index: this.selectedSlot,
+        ...HOTBAR_ITEMS[this.selectedSlot],
+      }),
     };
   }
 
@@ -139,7 +155,16 @@ export class BuildersValleyScene extends Phaser.Scene {
     const body = this.add.rectangle(0, 0, 22, 28, COLORS.player);
     body.setStrokeStyle(3, COLORS.outline);
     const facing = this.add.triangle(0, -18, -6, 5, 6, 5, 0, -7, 0xffffff);
-    player.add([shadow, body, facing]);
+    this.heldItemLabel = this.add
+      .text(15, 0, "", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "17px",
+        color: "#ffffff",
+        stroke: "#253238",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
+    player.add([shadow, body, facing, this.heldItemLabel]);
     player.setSize(24, 30);
     player.setDepth(20);
 
@@ -151,29 +176,80 @@ export class BuildersValleyScene extends Phaser.Scene {
 
   _createHotbar() {
     const camera = this.cameras.main;
-    const hotbar = this.add.container(camera.width / 2, camera.height - 42);
+    const hotbar = this.add.container(camera.width / 2, camera.height - 72);
     hotbar.setScrollFactor(0);
     hotbar.setDepth(100);
+    this.hotbarSlots = [];
 
-    const labels = ["✋", "🪵", "🪨", "📏", "✂"];
-    labels.forEach((label, index) => {
-      const x = (index - 2) * 58;
-      const slot = this.add.rectangle(x, 0, 50, 50, 0x17252c, 0.9);
-      slot.setStrokeStyle(index === 0 ? 3 : 1, index === 0 ? 0xf5d76e : 0xffffff, 0.9);
-      const icon = this.add.text(x, 0, label, { fontSize: "24px" }).setOrigin(0.5);
-      hotbar.add([slot, icon]);
+    HOTBAR_ITEMS.forEach((item, index) => {
+      const x = (index - 2) * 62;
+      const slot = this.add
+        .rectangle(x, 0, 54, 54, 0x17252c, 0.94)
+        .setInteractive({ useHandCursor: true });
+      const icon = this.add
+        .text(x, -2, item.icon, {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "25px",
+          color: "#ffffff",
+        })
+        .setOrigin(0.5);
+      const keyLabel = this.add
+        .text(x - 21, -22, String(index + 1), {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "11px",
+          color: "#d7e5e1",
+        })
+        .setOrigin(0.5);
+
+      slot.on("pointerdown", () => this._selectHotbarSlot(index));
+      this.hotbarSlots.push({ slot, icon, keyLabel, item });
+      hotbar.add([slot, icon, keyLabel]);
     });
 
-    const hint = this.add
-      .text(18, 18, "WASD / ลูกศร   •   Shift วิ่ง", {
+    const keyCodes = [
+      Phaser.Input.Keyboard.KeyCodes.ONE,
+      Phaser.Input.Keyboard.KeyCodes.TWO,
+      Phaser.Input.Keyboard.KeyCodes.THREE,
+      Phaser.Input.Keyboard.KeyCodes.FOUR,
+      Phaser.Input.Keyboard.KeyCodes.FIVE,
+    ];
+    this.hotbarKeys = keyCodes.map((keyCode, index) => {
+      const key = this.input.keyboard.addKey(keyCode);
+      key.on("down", () => this._selectHotbarSlot(index));
+      return key;
+    });
+
+    this.add
+      .text(18, camera.height - 42, "WASD / ลูกศร • Shift วิ่ง • 1–5 เลือก", {
         fontFamily: "Arial, sans-serif",
-        fontSize: "15px",
+        fontSize: "14px",
         color: "#ffffff",
         backgroundColor: "#17252ccc",
-        padding: { x: 10, y: 7 },
+        padding: { x: 9, y: 6 },
       })
+      .setOrigin(0, 1)
       .setScrollFactor(0)
       .setDepth(100);
-    hotbar.add(hint);
+
+    this._selectHotbarSlot(0);
+  }
+
+  _selectHotbarSlot(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= this.hotbarSlots.length) {
+      return;
+    }
+
+    this.selectedSlot = index;
+    this.hotbarSlots.forEach(({ slot, icon }, slotIndex) => {
+      const selected = slotIndex === index;
+      slot.setStrokeStyle(selected ? 4 : 1, selected ? 0xf5d76e : 0xffffff, selected ? 1 : 0.65);
+      slot.setFillStyle(selected ? 0x243c42 : 0x17252c, selected ? 1 : 0.94);
+      icon.setScale(selected ? 1.12 : 1);
+      icon.setAlpha(selected ? 1 : 0.82);
+    });
+
+    if (this.heldItemLabel) {
+      this.heldItemLabel.setText(HOTBAR_ITEMS[index].held);
+    }
   }
 }
