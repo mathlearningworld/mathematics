@@ -342,7 +342,17 @@ export class BuildersValleyScene extends Phaser.Scene {
       }
     });
 
+    const targetChanged = nearest !== this.targetResource;
     this.targetResource = nearest;
+
+    if (targetChanged && nearest) {
+      const requiredTool = nearest.getData("requiredTool");
+      const toolSlotIndex = HOTBAR_ITEMS.findIndex((item) => item.id === requiredTool);
+      if (toolSlotIndex >= 0) {
+        this._selectHotbarSlot(toolSlotIndex);
+      }
+    }
+
     this.targetIndicator
       .setVisible(Boolean(nearest))
       .setPosition(nearest?.x ?? 0, (nearest?.y ?? 0) - 12);
@@ -405,7 +415,15 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.targetResource = null;
     this.targetIndicator.setVisible(false);
     this._refreshInventoryHud();
-    this._showStatus(resourceType === "wood" ? "เก็บไม้แล้ว" : "เก็บหินแล้ว");
+
+    const blockSlotIndex = HOTBAR_ITEMS.findIndex(
+      (item) => item.kind === "BLOCK" && item.resourceType === resourceType,
+    );
+    if (blockSlotIndex >= 0) {
+      this._selectHotbarSlot(blockSlotIndex);
+    }
+
+    this._showStatus(resourceType === "wood" ? "เก็บไม้แล้ว พร้อมวาง" : "เก็บหินแล้ว พร้อมวาง");
   }
 
   _tryPlaceSelectedBlock(worldX, worldY) {
