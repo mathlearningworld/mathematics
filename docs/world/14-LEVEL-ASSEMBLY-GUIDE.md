@@ -217,3 +217,210 @@ Assembly Philosophy is accepted when the production team can demonstrate that:
 - foundational changes trigger revalidation of dependent layers.
 
 Until these rules are adopted, downstream assembly sections remain procedural guidance but are not yet governed production execution.
+
+## 2 Zone Assembly Order
+
+### 2.1 Objective
+
+Zone assembly converts the world specification into a controlled production sequence. The purpose is to prevent teams from building isolated attractive areas that later fail to connect into a readable, traversable, and performant whole.
+
+Builder's Valley must be assembled as one continuous player journey, not as independent dioramas. Each zone must establish the entry condition for the next zone while preserving sightlines, elevation logic, route continuity, and emotional progression.
+
+### 2.2 Authoritative Zone Sequence
+
+The production order for Builder's Valley is:
+
+```text
+Global Blockout and Valley Envelope
+→ Arrival Overlook
+→ Arrival Path
+→ River Corridor
+→ Waterfall Vista
+→ Bridge Approach
+→ Bridge Crossing
+→ Workshop Terrace
+→ Workshop Functional Core
+→ Supporting Edge and Background Zones
+→ Cross-Zone Readability Pass
+→ Runtime Integration Pass
+```
+
+This order is authoritative for production dependency. Teams may prototype downstream zones in isolation, but no downstream zone may be accepted before its upstream route, elevation, and sightline dependencies are approved.
+
+### 2.3 Zone Responsibilities
+
+| Order | Zone | Production Responsibility | Primary Output |
+|---|---|---|---|
+| 0 | Global Blockout and Valley Envelope | Establish total scale, valley walls, route length, elevation range, river direction, and background bounds | Approved macro blockout |
+| 1 | Arrival Overlook | Establish first-frame orientation, valley reveal, destination preview, and safe starting composition | Approved arrival frame |
+| 2 | Arrival Path | Establish readable descent, path width, route rhythm, and transition into the valley floor | Approved traversal corridor |
+| 3 | River Corridor | Establish the central natural spine, water adjacency, movement direction, and mid-valley depth | Approved river route |
+| 4 | Waterfall Vista | Establish natural anchor, vertical depth, audio source logic, and distant orientation | Approved natural landmark frame |
+| 5 | Bridge Approach | Establish anticipation, sightline reveal, approach clearance, and crossing decision space | Approved bridge reveal |
+| 6 | Bridge Crossing | Establish the primary constructed landmark, crossing safety, focal hierarchy, and route continuity | Approved crossing landmark |
+| 7 | Workshop Terrace | Establish destination identity, arrival decompression, functional zoning, and secondary landmark hierarchy | Approved destination terrace |
+| 8 | Workshop Functional Core | Establish workbench, storage, staging, interaction, and placement clearances | Approved functional footprint |
+| 9 | Supporting Edge and Background Zones | Complete valley enclosure, background depth, non-playable boundaries, and composition support | Approved environmental frame |
+| 10 | Cross-Zone Readability Pass | Validate continuous navigation, landmark sequence, false-route control, and visual hierarchy | Approved journey readability |
+| 11 | Runtime Integration Pass | Validate budgets, collision, LOD, culling, audio zones, FX density, and final integration | Runtime-ready zone package |
+
+### 2.4 Zone Dependency Chain
+
+Each zone begins only when its entry dependencies are stable.
+
+| Zone | Required Entry State | Unlocks |
+|---|---|---|
+| Global Blockout | Slice bounds, target scale, and governing documents available | All zone blockouts |
+| Arrival Overlook | Global scale, valley direction, and destination positions approved | Arrival Path composition |
+| Arrival Path | Arrival elevation and valley-floor connection approved | River Corridor route |
+| River Corridor | Terrain grade, river direction, and path adjacency approved | Waterfall Vista and Bridge Approach |
+| Waterfall Vista | River source direction and long sightline approved | Natural landmark layer, waterfall FX, audio planning |
+| Bridge Approach | River width, crossing elevation, and bridge sightline approved | Bridge Crossing |
+| Bridge Crossing | Approach paths, support points, and clearance approved | Workshop Terrace route |
+| Workshop Terrace | Crossing exit, terrace elevation, and destination sightline approved | Workshop Functional Core |
+| Workshop Functional Core | Terrace footprint and gameplay requirements approved | Props, interaction markers, local detail |
+| Supporting Zones | Primary route, landmarks, and camera views approved | Final enclosure and background composition |
+| Cross-Zone Readability | All primary zones structurally approved | Lighting, FX, audio, and polish acceptance |
+| Runtime Integration | Composition and gameplay readability passed | Slice acceptance review |
+
+A change that invalidates an entry state automatically reopens the affected zone and every dependent downstream zone.
+
+### 2.5 Per-Zone Assembly Procedure
+
+Every zone follows the same production sequence:
+
+1. **Define Bounds** — identify playable, visible, supporting, and excluded space.
+2. **Lock Entry and Exit** — establish where the player arrives, where the player leaves, and how the route continues.
+3. **Resolve Elevation** — confirm grades, steps, ramps, drops, and sightline height relationships.
+4. **Place Primary Anchor** — establish the landmark, natural feature, or functional destination that gives the zone identity.
+5. **Reserve Gameplay Space** — protect path widths, interaction clearances, placement zones, camera space, and recovery space.
+6. **Build Supporting Masses** — add terrain, rock, architecture, and vegetation masses that frame the route and anchor.
+7. **Validate Readability** — confirm route, destination, safe space, and zone identity from required viewpoints.
+8. **Apply Runtime Controls** — assign collision, LOD, culling, material, shadow, density, and audio/FX ownership.
+9. **Capture Evidence** — record required views, measurements, and validation results.
+10. **Close Zone Gate** — accept, reject, or return the zone for targeted correction.
+
+No zone is complete because its asset placement appears visually dense. Completion requires entry-to-exit function, composition hierarchy, and evidence.
+
+### 2.6 Transition Contracts
+
+The boundary between two adjacent zones is a production contract. Each transition must preserve:
+
+- continuous traversable width;
+- understandable forward direction;
+- compatible terrain grade and elevation;
+- at least one readable destination or next-zone cue;
+- no accidental collision trap or camera obstruction;
+- no abrupt material, lighting, vegetation, or audio discontinuity unless intentionally authored;
+- preserved runtime ownership for culling, audio, and FX groups.
+
+Required transitions are:
+
+| From | To | Transition Intent |
+|---|---|---|
+| Arrival Overlook | Arrival Path | Reveal becomes movement commitment |
+| Arrival Path | River Corridor | Descent opens into the valley's natural spine |
+| River Corridor | Waterfall Vista | Forward movement gains a distant natural anchor |
+| River Corridor | Bridge Approach | River adjacency turns into a clear crossing objective |
+| Bridge Approach | Bridge Crossing | Anticipation resolves into landmark traversal |
+| Bridge Crossing | Workshop Terrace | Crossing resolves into functional destination arrival |
+| Workshop Terrace | Workshop Functional Core | Destination identity resolves into actionable space |
+
+A transition failure belongs to both adjacent zones. It must not be assigned only to the downstream zone.
+
+### 2.7 Parallel Work Rules
+
+Parallel production is permitted only where dependencies are explicit.
+
+Safe parallel work examples:
+
+- background valley masses may progress while the primary route is refined, provided they do not alter approved silhouettes;
+- workshop prop concepts may progress while the terrace blockout is reviewed, provided final placement is deferred;
+- waterfall FX prototypes may progress while the vista is blocked out, provided source position and budget remain provisional;
+- vegetation asset preparation may progress before placement, provided density and sightline decisions remain open.
+
+Unsafe parallel work examples:
+
+- final bridge placement before river width and approach grades are approved;
+- dense vegetation painting before cross-zone sightlines are validated;
+- final workshop prop placement before interaction clearances are locked;
+- final lighting before valley enclosure and landmark silhouettes are stable;
+- audio zone finalization before zone boundaries and source locations are approved.
+
+Parallel work that violates dependency order is prototype work and must not be reported as accepted production completion.
+
+### 2.8 Zone Freeze Levels
+
+Zones use controlled freeze levels instead of a single ambiguous "done" state.
+
+| Freeze Level | Meaning | Permitted Changes |
+|---|---|---|
+| Z0 — Open | Zone is exploratory | Any change within governing scope |
+| Z1 — Blockout Frozen | Bounds, route, scale, and elevation are approved | Structural changes require review |
+| Z2 — Composition Frozen | Anchors, silhouettes, sightlines, and major masses are approved | No unreviewed landmark or route changes |
+| Z3 — Gameplay Frozen | Traversal, interaction space, safe zones, and clearances are approved | Gameplay-impacting changes require revalidation |
+| Z4 — Runtime Frozen | Collision, LOD, culling, materials, density, FX, and audio budgets are approved | Runtime-affecting changes require measurement |
+| Z5 — Accepted | Required evidence and cross-zone validation passed | Changes reopen affected acceptance gates |
+
+A zone may not advance to a higher freeze level while failures from a lower level remain unresolved.
+
+### 2.9 Required Evidence by Zone
+
+Each zone acceptance package must contain:
+
+- one entry-view capture;
+- one exit-view capture;
+- one primary-anchor capture;
+- one top-down or debug view showing bounds and route;
+- traversal and collision confirmation;
+- path-width and interaction-clearance measurements where applicable;
+- LOD and culling assignment confirmation;
+- zone budget result or provisional budget statement;
+- known issues and deferred corrections;
+- reviewer decision and freeze level.
+
+Additional required evidence:
+
+| Zone | Additional Evidence |
+|---|---|
+| Arrival Overlook | First-frame composition and destination visibility |
+| Arrival Path | Grade, width, and route continuity |
+| River Corridor | River direction, edge safety, and path-water separation |
+| Waterfall Vista | Long-distance visibility and waterfall source alignment |
+| Bridge Approach | Bridge reveal distance and approach clearance |
+| Bridge Crossing | Crossing collision, rail safety, and both-direction readability |
+| Workshop Terrace | Destination arrival frame and functional-zone separation |
+| Workshop Functional Core | Interaction radius, staging area, and placement clearance |
+| Supporting Zones | Background silhouette and non-playable boundary control |
+
+### 2.10 Cross-Zone Revalidation Triggers
+
+Cross-zone review is mandatory when any of the following changes:
+
+- global terrain scale or valley elevation range;
+- river course, width, or waterfall source;
+- primary route endpoint or path grade;
+- bridge position, span, height, or orientation;
+- workshop terrace position, elevation, or footprint;
+- primary landmark silhouette or visibility;
+- camera framing that affects arrival or destination readability;
+- vegetation mass that blocks a previously approved sightline;
+- lighting, fog, or FX that alters route or landmark visibility;
+- runtime partition, culling group, or audio-zone boundary.
+
+The review must identify every dependent zone and revoke only the freeze levels affected by the change. Revalidation must be targeted, but it must never be skipped.
+
+### 2.11 Section Exit Gate
+
+Zone Assembly Order is accepted when the production team can demonstrate that:
+
+- the complete Builder's Valley journey has an authoritative zone sequence;
+- every zone has defined bounds, entry, exit, anchor, gameplay space, and evidence requirements;
+- upstream and downstream dependencies are explicit;
+- transition ownership is shared by adjacent zones;
+- parallel work is separated from accepted production completion;
+- freeze levels replace ambiguous completion claims;
+- cross-zone changes trigger targeted revalidation;
+- the final journey can be reviewed continuously from Arrival Overlook to Workshop Functional Core.
+
+Until this gate passes, detailed terrain, water, vegetation, landmark, and workshop assembly may proceed only as controlled blockout or prototype work.
