@@ -1,44 +1,51 @@
-# สะพานเศษส่วน (Fraction Bridge)
+# Math Learning World — Frontend
 
-## วัตถุประสงค์การเรียนรู้
+Frontend หลักกำลังพัฒนาเป็น **The Builder's Valley**: เกม 2D sandbox ที่ผู้เล่นสำรวจ เก็บวัตถุดิบ และสร้างสิ่งต่าง ๆ โดยคณิตศาสตร์เกิดจากกฎของโลก ไม่ใช่หน้าจอแบบฝึกหัด
 
-เกมต้นแบบนี้ช่วยให้ผู้เรียนค้นพบด้วยตัวเองว่า:
+## Runtime ที่เปิดเป็นค่าเริ่มต้น
 
-1/2 = 1/4 + 1/4 = 2/4
+`src/main.js` เปิด `src/sandbox/createSandboxGame.js`
 
-ผ่านการเล่น 3 รอบ:
-- **รอบ 1**: สร้างสะพาน 1/2 ด้วยชิ้นส่วน 1/2
-- **รอบ 2**: สร้างสะพานเดียวกันด้วยชิ้นส่วน 1/4 สองชิ้น
-- **รอบ 3**: เลือกสะพาน 2/4 ที่เท่ากับ 1/2
+Graybox Foundation รอบแรกประกอบด้วย:
 
-## การติดตั้ง
+- โลก grid ขนาดเล็กที่ใหญ่กว่าหน้าจอ
+- ตัวละคร placeholder
+- เดินด้วย WASD หรือปุ่มลูกศร
+- วิ่งด้วย Shift
+- collision กับต้นไม้และก้อนหิน
+- กล้องติดตามผู้เล่น
+- stream และ resource landmarks
+- hotbar ภาษาภาพ 5 ช่อง
+
+## Fraction Bridge
+
+โค้ด Fraction Bridge เดิมยังอยู่ใน `src/game/` เพื่อเป็นต้นแบบกลไกการเรียนรู้ที่จบหนึ่ง flow แล้ว แต่ไม่ใช่ Product Runtime หลักของ Sandbox
+
+## คำสั่ง Local Gate
 
 ```bash
 cd frontend
 npm install
+npm test
+npm run build
+npm run dev
 ```
 
-## คำสั่ง
+เปิด URL ที่ Vite แสดง แล้วตรวจ:
 
-| คำสั่ง | รายละเอียด |
-|--------|------------|
-| `npm run dev` | เริ่มเซิร์ฟเวอร์สำหรับพัฒนา |
-| `npm test` | รันเทสทั้งหมด |
-| `npm run build` | สร้างไฟล์สำหรับ production |
-| `npm run preview` | ดูตัวอย่างไฟล์ที่ build แล้ว |
+1. เดินได้ทั้ง WASD และปุ่มลูกศร
+2. เดินเฉียงไม่เร็วกว่าเดินตรง
+3. Shift ทำให้วิ่ง
+4. ชนต้นไม้และหินแล้วผ่านไม่ได้
+5. กล้องตามผู้เล่นและไม่ออกนอกขอบโลก
+6. Hotbar อยู่กับหน้าจอ ไม่เลื่อนตามโลก
 
-## การตรวจสอบ Evidence
+## Architecture Boundary
 
-เปิด Console ในเบราว์เซอร์แล้วพิมพ์:
+- `sandbox/config` — world/grid coordinate authority
+- `sandbox/domain` — pure game rules
+- `sandbox/input` — physical input adapters
+- `sandbox/scenes` — Phaser presentation and orchestration
+- `game/` — archived Fraction Bridge prototype
 
-```js
-window.__FRACTION_BRIDGE_EVIDENCE__.getEvents()
-```
-
-## ข้อจำกัดในเวอร์ชันนี้
-
-- ยังไม่มีการเชื่อมต่อกับ Backend หรือ PostgreSQL
-- ยังไม่มีระบบบันทึกข้อมูลผู้เรียน
-- ยังไม่มีระบบ account หรือ authentication
-- ใช้ Phaser Graphics ทั้งหมด ไม่มีภาพภายนอก
-- รองรับการเล่นด้วยเมาส์และระบบสัมผัส
+Prisma, Backend และ Learning Projection ยังไม่ถูกเชื่อมใน Slice นี้
