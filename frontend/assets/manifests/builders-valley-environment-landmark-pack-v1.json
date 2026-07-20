@@ -1,0 +1,33 @@
+{
+  "manifestVersion": 1,
+  "packId": "BUILDERS_VALLEY_ENVIRONMENT_LANDMARK_PACK_V1",
+  "status": "ART_REVIEW_READY",
+  "style": {
+    "projection": "ORTHOGRAPHIC_THREE_QUARTER_TOP_DOWN",
+    "grid": "RECTANGULAR",
+    "filter": "NEAREST_NEIGHBOR",
+    "lightDirection": "UPPER_LEFT",
+    "canvas": [256, 256]
+  },
+  "source": {
+    "path": "frontend/assets/builders-valley/environment/builders-valley-environment-landmark-pack-v1.svg",
+    "license": "PROJECT_ORIGINAL_ASSISTED_PIXEL_ART",
+    "provenance": "Created specifically for Math Learning World from the approved Builders Valley visual direction. No external marketplace or search-result artwork was copied."
+  },
+  "assets": [
+    { "assetId": "BV_BRIDGE_WOOD_MODULE_01", "category": "landmark", "rect": [8, 8, 120, 72], "anchor": "bottom-center", "runtimeIntegrated": false },
+    { "assetId": "BV_WORKBENCH_01", "category": "landmark", "rect": [140, 10, 104, 72], "anchor": "bottom-center", "runtimeIntegrated": false },
+    { "assetId": "BV_CRATE_01", "category": "prop", "rect": [12, 112, 60, 50], "anchor": "bottom-center", "runtimeIntegrated": false },
+    { "assetId": "BV_BARREL_01", "category": "prop", "rect": [76, 112, 56, 52], "anchor": "bottom-center", "runtimeIntegrated": false },
+    { "assetId": "BV_LANTERN_POST_01", "category": "prop-light", "rect": [142, 108, 64, 72], "anchor": "bottom-center", "runtimeIntegrated": false },
+    { "assetId": "BV_DIRT_PATH_TILE_01", "category": "terrain-detail", "rect": [202, 112, 44, 44], "anchor": "world", "runtimeIntegrated": false },
+    { "assetId": "BV_CLIFF_EDGE_01", "category": "terrain-boundary", "rect": [8, 184, 112, 56], "anchor": "bottom-left", "runtimeIntegrated": false },
+    { "assetId": "BV_GRASS_DETAILS_01", "category": "terrain-detail", "rect": [136, 184, 112, 56], "anchor": "world", "runtimeIntegrated": false }
+  ],
+  "integrationBoundary": {
+    "gameplayLogicChangesAllowed": false,
+    "collisionChangesAllowed": false,
+    "intentHotbarChangesAllowed": false,
+    "recommendedNextStep": "Human art review, then a bounded world-composition integration slice using these semantic IDs."
+  }
+}
