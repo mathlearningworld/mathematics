@@ -10,27 +10,27 @@ import {
 import { addResource, consumeResource, createInventory } from "../domain/inventory.js";
 import { resolveMovement } from "../domain/movement.js";
 import { PlayerInput } from "../input/PlayerInput.js";
+import {
+  ART_COLORS,
+  createAmbientCritter,
+  createHotbarIcon,
+  createPixelPlayer,
+  createPixelStone,
+  createPixelTree,
+  createPlacedBlock,
+  createTargetBrackets,
+  drawPixelWorld,
+  setHeldItemVisual,
+  spawnPixelBurst,
+} from "../art/pixelArtFactory.js";
 
 const HOTBAR_ITEMS = Object.freeze([
-  { id: "hand", kind: "HAND", icon: "✋", held: "" },
-  { id: "wood", kind: "BLOCK", resourceType: "wood", icon: "▤", held: "▤" },
-  { id: "stone", kind: "BLOCK", resourceType: "stone", icon: "◆", held: "◆" },
-  { id: "pickaxe", kind: "TOOL", toolFor: "stone", icon: "╱", held: "╱" },
-  { id: "axe", kind: "TOOL", toolFor: "wood", icon: "✂", held: "✂" },
+  { id: "hand", kind: "HAND" },
+  { id: "wood", kind: "BLOCK", resourceType: "wood" },
+  { id: "stone", kind: "BLOCK", resourceType: "stone" },
+  { id: "pickaxe", kind: "TOOL", toolFor: "stone" },
+  { id: "axe", kind: "TOOL", toolFor: "wood" },
 ]);
-
-const COLORS = Object.freeze({
-  grass: 0x5f9f55,
-  grassAlt: 0x6eae61,
-  water: 0x3d8fc4,
-  waterLight: 0x72c4e8,
-  soil: 0x8b6848,
-  tree: 0x2f6f3e,
-  trunk: 0x795338,
-  stone: 0x707b82,
-  player: 0xf5b642,
-  outline: 0x253238,
-});
 
 export class BuildersValleyScene extends Phaser.Scene {
   constructor() {
@@ -41,7 +41,6 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.hotbarSlots = [];
     this.hotbarKeys = [];
     this.selectedSlot = 0;
-    this.heldItemLabel = null;
     this.inventory = createInventory();
     this.resourceNodes = [];
     this.placedBlocks = [];
@@ -50,6 +49,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.actionKeys = [];
     this.eventLog = [];
     this.statusLabel = null;
+    this.lastFacing = "right";
   }
 
   create() {
@@ -57,10 +57,16 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.setBackgroundColor("#315f45");
 
-    this._drawGround();
-    this._drawStream();
+    drawPixelWorld(this, {
+      worldWidth: WORLD_WIDTH,
+      worldHeight: WORLD_HEIGHT,
+      tileSize: TILE_SIZE,
+      stream: STREAM,
+    });
+
     this.obstacles = this.physics.add.staticGroup();
     this._createResourceLandmarks();
+    this._createAmbientLife();
     this._createPlayer();
     this._createHotbar();
     this._createInteractionHud();
@@ -73,6 +79,7 @@ export class BuildersValleyScene extends Phaser.Scene {
 
     window.__BUILDERS_VALLEY__ = {
       scene: this,
+      artSlice: "BUILDERS_VALLEY_ART_VERTICAL_SLICE_V1",
       getPlayerPosition: () => ({ x: this.player.x, y: this.player.y }),
       getSelectedSlot: () => ({
         index: this.selectedSlot,
@@ -83,55 +90,37 @@ export class BuildersValleyScene extends Phaser.Scene {
     };
   }
 
-  update() {
+  update(time) {
     const intent = this.playerInput.read();
     const speed = PLAYER_SPEED * (intent.running ? PLAYER_RUN_MULTIPLIER : 1);
     const movement = resolveMovement(intent, speed);
 
     this.player.body.setVelocity(movement.velocityX, movement.velocityY);
+    this._updatePlayerVisual(time, movement);
+    this._updateDepths();
     this._updateTargetResource();
+
     if (this.actionKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))) {
       this._tryCollectResource();
     }
-    this.player.setRotation(
-      movement.moving
-        ? Math.atan2(movement.velocityY, movement.velocityX) + Math.PI / 2
-        : this.player.rotation,
-    );
   }
 
-  _drawGround() {
-    const graphics = this.add.graphics();
-    graphics.fillStyle(COLORS.grass, 1);
-    graphics.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-    graphics.fillStyle(COLORS.grassAlt, 0.35);
-    for (let y = 0; y < WORLD_HEIGHT; y += TILE_SIZE * 2) {
-      for (let x = (y / TILE_SIZE) % 4 === 0 ? 0 : TILE_SIZE; x < WORLD_WIDTH; x += TILE_SIZE * 2) {
-        graphics.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-      }
+  _updatePlayerVisual(time, movement) {
+    if (movement.moving && Math.abs(movement.velocityX) > 1) {
+      this.lastFacing = movement.velocityX < 0 ? "left" : "right";
+      this.player.setFacing(this.lastFacing);
     }
-
-    graphics.lineStyle(1, 0xffffff, 0.035);
-    for (let x = 0; x <= WORLD_WIDTH; x += TILE_SIZE) {
-      graphics.lineBetween(x, 0, x, WORLD_HEIGHT);
-    }
-    for (let y = 0; y <= WORLD_HEIGHT; y += TILE_SIZE) {
-      graphics.lineBetween(0, y, WORLD_WIDTH, y);
-    }
+    this.player.setWalkingFrame(time, movement.moving);
   }
 
-  _drawStream() {
-    const stream = this.add.graphics();
-    stream.fillStyle(COLORS.soil, 0.55);
-    stream.fillRect(STREAM.left - 8, STREAM.top, STREAM.width + 16, STREAM.height);
-    stream.fillStyle(COLORS.water, 1);
-    stream.fillRect(STREAM.left, STREAM.top, STREAM.width, STREAM.height);
-
-    stream.lineStyle(3, COLORS.waterLight, 0.45);
-    for (let y = TILE_SIZE; y < WORLD_HEIGHT; y += TILE_SIZE * 2) {
-      stream.lineBetween(STREAM.left + 12, y, STREAM.left + STREAM.width - 12, y + 8);
-    }
+  _updateDepths() {
+    this.player.setDepth(200 + Math.floor(this.player.y));
+    this.resourceNodes.forEach((node) => {
+      if (node.active) node.setDepth(100 + Math.floor(node.y));
+    });
+    this.placedBlocks.forEach((block) => {
+      if (block.active) block.setDepth(100 + Math.floor(block.y));
+    });
   }
 
   _createResourceLandmarks() {
@@ -141,67 +130,54 @@ export class BuildersValleyScene extends Phaser.Scene {
     ];
     const stones = [[10, 15], [17, 8], [37, 18], [42, 7]];
 
-    trees.forEach(([column, row]) => this._createTree(column, row));
-    stones.forEach(([column, row]) => this._createStone(column, row));
+    trees.forEach(([column, row], index) => this._createTree(column, row, index % 2));
+    stones.forEach(([column, row], index) => this._createStone(column, row, index % 2));
   }
 
-  _createTree(column, row) {
+  _createTree(column, row, variant) {
     const x = column * TILE_SIZE + TILE_SIZE / 2;
     const y = row * TILE_SIZE + TILE_SIZE / 2;
-    const tree = this.add.container(x, y);
-    const crown = this.add.circle(0, -10, 18, COLORS.tree);
-    const trunk = this.add.rectangle(0, 12, 10, 22, COLORS.trunk);
-    tree.add([trunk, crown]);
-    tree.setSize(36, 46);
-    tree.setData({ resourceType: "wood", requiredTool: "axe" });
+    const tree = createPixelTree(this, x, y, variant);
+    tree.setData({ resourceType: "wood", requiredTool: "axe", assetId: "BV_TREE_OAK_01" });
     tree.setInteractive({ useHandCursor: true });
     tree.on("pointerdown", (pointer, localX, localY, event) => {
       event.stopPropagation();
       this._tryCollectResource(tree);
     });
     this.physics.add.existing(tree, true);
+    tree.body.setSize(26, 20);
     this.obstacles.add(tree);
     this.resourceNodes.push(tree);
   }
 
-  _createStone(column, row) {
+  _createStone(column, row, variant) {
     const x = column * TILE_SIZE + TILE_SIZE / 2;
     const y = row * TILE_SIZE + TILE_SIZE / 2;
-    const stone = this.add.rectangle(x, y, 30, 24, COLORS.stone);
-    stone.setStrokeStyle(3, COLORS.outline, 0.45);
-    stone.setData({ resourceType: "stone", requiredTool: "pickaxe" });
+    const stone = createPixelStone(this, x, y, variant);
+    stone.setData({ resourceType: "stone", requiredTool: "pickaxe", assetId: "BV_ROCK_FIELD_01" });
     stone.setInteractive({ useHandCursor: true });
     stone.on("pointerdown", (pointer, localX, localY, event) => {
       event.stopPropagation();
       this._tryCollectResource(stone);
     });
     this.physics.add.existing(stone, true);
+    stone.body.setSize(28, 20);
     this.obstacles.add(stone);
     this.resourceNodes.push(stone);
   }
 
-  _createPlayer() {
-    const player = this.add.container(6 * TILE_SIZE, 8 * TILE_SIZE);
-    const shadow = this.add.ellipse(0, 12, 24, 10, 0x000000, 0.22);
-    const body = this.add.rectangle(0, 0, 22, 28, COLORS.player);
-    body.setStrokeStyle(3, COLORS.outline);
-    const facing = this.add.triangle(0, -18, -6, 5, 6, 5, 0, -7, 0xffffff);
-    this.heldItemLabel = this.add
-      .text(15, 0, "", {
-        fontFamily: "Arial, sans-serif",
-        fontSize: "17px",
-        color: "#ffffff",
-        stroke: "#253238",
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5);
-    player.add([shadow, body, facing, this.heldItemLabel]);
-    player.setSize(24, 30);
-    player.setDepth(20);
+  _createAmbientLife() {
+    createAmbientCritter(this, 11 * TILE_SIZE, 12 * TILE_SIZE);
+    createAmbientCritter(this, 35 * TILE_SIZE, 21 * TILE_SIZE);
+  }
 
+  _createPlayer() {
+    const player = createPixelPlayer(this, 6 * TILE_SIZE, 8 * TILE_SIZE);
+    player.setData("assetId", "BV_PLAYER_BUILDER_01");
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
     player.body.setDrag(900, 900);
+    player.body.setSize(22, 24);
     this.player = player;
   }
 
@@ -209,32 +185,25 @@ export class BuildersValleyScene extends Phaser.Scene {
     const camera = this.cameras.main;
     const hotbar = this.add.container(camera.width / 2, camera.height - 72);
     hotbar.setScrollFactor(0);
-    hotbar.setDepth(100);
+    hotbar.setDepth(10000);
     this.hotbarSlots = [];
 
     HOTBAR_ITEMS.forEach((item, index) => {
       const x = (index - 2) * 62;
       const slot = this.add
-        .rectangle(x, 0, 54, 54, 0x17252c, 0.94)
+        .rectangle(x, 0, 54, 54, 0x17252c, 0.96)
         .setInteractive({ useHandCursor: true });
-      const icon = this.add
-        .text(x, -2, item.icon, {
-          fontFamily: "Arial, sans-serif",
-          fontSize: "25px",
-          color: "#ffffff",
-        })
-        .setOrigin(0.5);
+      const icon = createHotbarIcon(this, item.id, x, -1);
       const keyLabel = this.add
         .text(x - 21, -22, String(index + 1), {
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "monospace",
           fontSize: "11px",
           color: "#d7e5e1",
         })
         .setOrigin(0.5);
-
       const countLabel = this.add
         .text(x + 19, 18, "", {
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "monospace",
           fontSize: "13px",
           color: "#ffffff",
           stroke: "#000000",
@@ -262,7 +231,7 @@ export class BuildersValleyScene extends Phaser.Scene {
 
     this.add
       .text(18, camera.height - 42, "WASD / ลูกศร • Shift วิ่ง • 1–5 เลือก", {
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "monospace",
         fontSize: "14px",
         color: "#ffffff",
         backgroundColor: "#17252ccc",
@@ -270,31 +239,28 @@ export class BuildersValleyScene extends Phaser.Scene {
       })
       .setOrigin(0, 1)
       .setScrollFactor(0)
-      .setDepth(100);
+      .setDepth(10000);
 
     this._selectHotbarSlot(0);
     this._refreshInventoryHud();
   }
 
   _createInteractionHud() {
-    this.targetIndicator = this.add
-      .circle(0, 0, 27)
-      .setStrokeStyle(3, 0xf5d76e, 1)
-      .setFillStyle(0xf5d76e, 0.08)
-      .setDepth(19)
+    this.targetIndicator = createTargetBrackets(this)
+      .setDepth(9999)
       .setVisible(false);
 
     this.statusLabel = this.add
       .text(this.cameras.main.width / 2, 22, "", {
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "monospace",
         fontSize: "15px",
         color: "#ffffff",
-        backgroundColor: "#17252ccc",
+        backgroundColor: "#17252cdd",
         padding: { x: 10, y: 7 },
       })
       .setOrigin(0.5, 0)
       .setScrollFactor(0)
-      .setDepth(101)
+      .setDepth(10001)
       .setVisible(false);
   }
 
@@ -312,22 +278,22 @@ export class BuildersValleyScene extends Phaser.Scene {
   }
 
   _selectHotbarSlot(index) {
-    if (!Number.isInteger(index) || index < 0 || index >= this.hotbarSlots.length) {
-      return;
-    }
+    if (!Number.isInteger(index) || index < 0 || index >= this.hotbarSlots.length) return;
 
     this.selectedSlot = index;
     this.hotbarSlots.forEach(({ slot, icon }, slotIndex) => {
       const selected = slotIndex === index;
-      slot.setStrokeStyle(selected ? 4 : 1, selected ? 0xf5d76e : 0xffffff, selected ? 1 : 0.65);
-      slot.setFillStyle(selected ? 0x243c42 : 0x17252c, selected ? 1 : 0.94);
+      slot.setStrokeStyle(
+        selected ? 4 : 1,
+        selected ? ART_COLORS.highlight : 0xffffff,
+        selected ? 1 : 0.65,
+      );
+      slot.setFillStyle(selected ? 0x243c42 : 0x17252c, selected ? 1 : 0.96);
       icon.setScale(selected ? 1.12 : 1);
       icon.setAlpha(selected ? 1 : 0.82);
     });
 
-    if (this.heldItemLabel) {
-      this.heldItemLabel.setText(HOTBAR_ITEMS[index].held);
-    }
+    setHeldItemVisual(this, this.player, HOTBAR_ITEMS[index].id);
   }
 
   _updateTargetResource() {
@@ -347,7 +313,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.targetResource = nearest;
     this.targetIndicator
       .setVisible(Boolean(nearest))
-      .setPosition(nearest?.x ?? 0, nearest?.y ?? 0);
+      .setPosition(nearest?.x ?? 0, (nearest?.y ?? 0) - 12);
   }
 
   _tryCollectResource(resource = this.targetResource) {
@@ -367,6 +333,8 @@ export class BuildersValleyScene extends Phaser.Scene {
       return;
     }
 
+    const resourceX = resource.x;
+    const resourceY = resource.y;
     this.inventory = addResource(this.inventory, resourceType);
     this._recordEvent("resource_collected", {
       resourceType,
@@ -375,6 +343,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     });
     this.resourceNodes = this.resourceNodes.filter((node) => node !== resource);
     resource.destroy();
+    spawnPixelBurst(this, resourceX, resourceY, resourceType);
     this.targetResource = null;
     this.targetIndicator.setVisible(false);
     this._refreshInventoryHud();
@@ -399,7 +368,9 @@ export class BuildersValleyScene extends Phaser.Scene {
       tileY >= STREAM.top &&
       tileY <= STREAM.top + STREAM.height;
     const occupied = [...this.resourceNodes, ...this.placedBlocks].some(
-      (object) => object.active && Phaser.Math.Distance.Between(tileX, tileY, object.x, object.y) < TILE_SIZE * 0.7,
+      (object) =>
+        object.active &&
+        Phaser.Math.Distance.Between(tileX, tileY, object.x, object.y) < TILE_SIZE * 0.7,
     );
     if (insideStream || occupied) {
       this._showStatus("พื้นที่นี้ยังวางไม่ได้");
@@ -413,12 +384,13 @@ export class BuildersValleyScene extends Phaser.Scene {
     }
 
     this.inventory = result.inventory;
-    const color = selectedItem.resourceType === "wood" ? COLORS.trunk : COLORS.stone;
-    const block = this.add.rectangle(tileX, tileY, TILE_SIZE - 4, TILE_SIZE - 4, color);
-    block.setStrokeStyle(3, COLORS.outline, 0.7);
+    const block = createPlacedBlock(this, tileX, tileY, selectedItem.resourceType);
+    block.setData("assetId", selectedItem.resourceType === "wood" ? "BV_BLOCK_WOOD_01" : "BV_BLOCK_STONE_01");
     this.physics.add.existing(block, true);
+    block.body.setSize(28, 22);
     this.obstacles.add(block);
     this.placedBlocks.push(block);
+    spawnPixelBurst(this, tileX, tileY, selectedItem.resourceType);
     this._recordEvent("block_placed", {
       resourceType: selectedItem.resourceType,
       tile: { column: Math.floor(tileX / TILE_SIZE), row: Math.floor(tileY / TILE_SIZE) },
