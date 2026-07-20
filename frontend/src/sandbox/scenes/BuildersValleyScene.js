@@ -7,15 +7,16 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from "../config/worldContract.js";
+import { addResource, consumeResource, createInventory } from "../domain/inventory.js";
 import { resolveMovement } from "../domain/movement.js";
 import { PlayerInput } from "../input/PlayerInput.js";
 
 const HOTBAR_ITEMS = Object.freeze([
   { id: "hand", kind: "HAND", icon: "✋", held: "" },
-  { id: "wood", kind: "BLOCK", icon: "▤", held: "▤" },
-  { id: "stone", kind: "BLOCK", icon: "◆", held: "◆" },
-  { id: "measure", kind: "TOOL", icon: "╱", held: "╱" },
-  { id: "cut", kind: "TOOL", icon: "✂", held: "✂" },
+  { id: "wood", kind: "BLOCK", resourceType: "wood", icon: "▤", held: "▤" },
+  { id: "stone", kind: "BLOCK", resourceType: "stone", icon: "◆", held: "◆" },
+  { id: "pickaxe", kind: "TOOL", toolFor: "stone", icon: "╱", held: "╱" },
+  { id: "axe", kind: "TOOL", toolFor: "wood", icon: "✂", held: "✂" },
 ]);
 
 const COLORS = Object.freeze({
@@ -41,6 +42,14 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.hotbarKeys = [];
     this.selectedSlot = 0;
     this.heldItemLabel = null;
+    this.inventory = createInventory();
+    this.resourceNodes = [];
+    this.placedBlocks = [];
+    this.targetResource = null;
+    this.targetIndicator = null;
+    this.actionKeys = [];
+    this.eventLog = [];
+    this.statusLabel = null;
   }
 
   create() {
@@ -54,6 +63,8 @@ export class BuildersValleyScene extends Phaser.Scene {
     this._createResourceLandmarks();
     this._createPlayer();
     this._createHotbar();
+    this._createInteractionHud();
+    this._createInteractionInput();
 
     this.playerInput = new PlayerInput(this);
     this.physics.add.collider(this.player, this.obstacles);
@@ -67,6 +78,8 @@ export class BuildersValleyScene extends Phaser.Scene {
         index: this.selectedSlot,
         ...HOTBAR_ITEMS[this.selectedSlot],
       }),
+      getInventory: () => ({ ...this.inventory }),
+      getEvents: () => this.eventLog.map((event) => ({ ...event })),
     };
   }
 
@@ -76,6 +89,10 @@ export class BuildersValleyScene extends Phaser.Scene {
     const movement = resolveMovement(intent, speed);
 
     this.player.body.setVelocity(movement.velocityX, movement.velocityY);
+    this._updateTargetResource();
+    if (this.actionKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))) {
+      this._tryCollectResource();
+    }
     this.player.setRotation(
       movement.moving
         ? Math.atan2(movement.velocityY, movement.velocityX) + Math.PI / 2
@@ -136,8 +153,15 @@ export class BuildersValleyScene extends Phaser.Scene {
     const trunk = this.add.rectangle(0, 12, 10, 22, COLORS.trunk);
     tree.add([trunk, crown]);
     tree.setSize(36, 46);
+    tree.setData({ resourceType: "wood", requiredTool: "axe" });
+    tree.setInteractive({ useHandCursor: true });
+    tree.on("pointerdown", (pointer, localX, localY, event) => {
+      event.stopPropagation();
+      this._tryCollectResource(tree);
+    });
     this.physics.add.existing(tree, true);
     this.obstacles.add(tree);
+    this.resourceNodes.push(tree);
   }
 
   _createStone(column, row) {
@@ -145,8 +169,15 @@ export class BuildersValleyScene extends Phaser.Scene {
     const y = row * TILE_SIZE + TILE_SIZE / 2;
     const stone = this.add.rectangle(x, y, 30, 24, COLORS.stone);
     stone.setStrokeStyle(3, COLORS.outline, 0.45);
+    stone.setData({ resourceType: "stone", requiredTool: "pickaxe" });
+    stone.setInteractive({ useHandCursor: true });
+    stone.on("pointerdown", (pointer, localX, localY, event) => {
+      event.stopPropagation();
+      this._tryCollectResource(stone);
+    });
     this.physics.add.existing(stone, true);
     this.obstacles.add(stone);
+    this.resourceNodes.push(stone);
   }
 
   _createPlayer() {
@@ -201,9 +232,19 @@ export class BuildersValleyScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
+      const countLabel = this.add
+        .text(x + 19, 18, "", {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "13px",
+          color: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 3,
+        })
+        .setOrigin(1, 1);
+
       slot.on("pointerdown", () => this._selectHotbarSlot(index));
-      this.hotbarSlots.push({ slot, icon, keyLabel, item });
-      hotbar.add([slot, icon, keyLabel]);
+      this.hotbarSlots.push({ slot, icon, keyLabel, countLabel, item });
+      hotbar.add([slot, icon, keyLabel, countLabel]);
     });
 
     const keyCodes = [
@@ -232,6 +273,42 @@ export class BuildersValleyScene extends Phaser.Scene {
       .setDepth(100);
 
     this._selectHotbarSlot(0);
+    this._refreshInventoryHud();
+  }
+
+  _createInteractionHud() {
+    this.targetIndicator = this.add
+      .circle(0, 0, 27)
+      .setStrokeStyle(3, 0xf5d76e, 1)
+      .setFillStyle(0xf5d76e, 0.08)
+      .setDepth(19)
+      .setVisible(false);
+
+    this.statusLabel = this.add
+      .text(this.cameras.main.width / 2, 22, "", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "15px",
+        color: "#ffffff",
+        backgroundColor: "#17252ccc",
+        padding: { x: 10, y: 7 },
+      })
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(101)
+      .setVisible(false);
+  }
+
+  _createInteractionInput() {
+    this.actionKeys = [
+      this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+      this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+    ];
+
+    this.input.on("pointerdown", (pointer, gameObjects) => {
+      if (gameObjects.length === 0) {
+        this._tryPlaceSelectedBlock(pointer.worldX, pointer.worldY);
+      }
+    });
   }
 
   _selectHotbarSlot(index) {
@@ -251,5 +328,136 @@ export class BuildersValleyScene extends Phaser.Scene {
     if (this.heldItemLabel) {
       this.heldItemLabel.setText(HOTBAR_ITEMS[index].held);
     }
+  }
+
+  _updateTargetResource() {
+    const maxDistance = 74;
+    let nearest = null;
+    let nearestDistance = maxDistance;
+
+    this.resourceNodes.forEach((node) => {
+      if (!node.active) return;
+      const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, node.x, node.y);
+      if (distance < nearestDistance) {
+        nearest = node;
+        nearestDistance = distance;
+      }
+    });
+
+    this.targetResource = nearest;
+    this.targetIndicator
+      .setVisible(Boolean(nearest))
+      .setPosition(nearest?.x ?? 0, nearest?.y ?? 0);
+  }
+
+  _tryCollectResource(resource = this.targetResource) {
+    if (!resource?.active) return;
+
+    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, resource.x, resource.y);
+    if (distance > 74) {
+      this._showStatus("เข้าใกล้อีกนิด");
+      return;
+    }
+
+    const selectedItem = HOTBAR_ITEMS[this.selectedSlot];
+    const resourceType = resource.getData("resourceType");
+    if (selectedItem.id !== resource.getData("requiredTool")) {
+      this._showStatus(resourceType === "wood" ? "เลือกเครื่องมือตัดไม้" : "เลือกเครื่องมือขุดหิน");
+      this.cameras.main.shake(70, 0.0015);
+      return;
+    }
+
+    this.inventory = addResource(this.inventory, resourceType);
+    this._recordEvent("resource_collected", {
+      resourceType,
+      amount: 1,
+      inventoryCount: this.inventory[resourceType],
+    });
+    this.resourceNodes = this.resourceNodes.filter((node) => node !== resource);
+    resource.destroy();
+    this.targetResource = null;
+    this.targetIndicator.setVisible(false);
+    this._refreshInventoryHud();
+    this._showStatus(resourceType === "wood" ? "เก็บไม้แล้ว" : "เก็บหินแล้ว");
+  }
+
+  _tryPlaceSelectedBlock(worldX, worldY) {
+    const selectedItem = HOTBAR_ITEMS[this.selectedSlot];
+    if (selectedItem.kind !== "BLOCK") return;
+
+    const tileX = Math.floor(worldX / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
+    const tileY = Math.floor(worldY / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
+    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, tileX, tileY);
+    if (distance > 100) {
+      this._showStatus("วางได้เฉพาะพื้นที่ใกล้ตัว");
+      return;
+    }
+
+    const insideStream =
+      tileX >= STREAM.left &&
+      tileX <= STREAM.left + STREAM.width &&
+      tileY >= STREAM.top &&
+      tileY <= STREAM.top + STREAM.height;
+    const occupied = [...this.resourceNodes, ...this.placedBlocks].some(
+      (object) => object.active && Phaser.Math.Distance.Between(tileX, tileY, object.x, object.y) < TILE_SIZE * 0.7,
+    );
+    if (insideStream || occupied) {
+      this._showStatus("พื้นที่นี้ยังวางไม่ได้");
+      return;
+    }
+
+    const result = consumeResource(this.inventory, selectedItem.resourceType);
+    if (!result.consumed) {
+      this._showStatus("ยังไม่มีวัตถุดิบในช่องนี้");
+      return;
+    }
+
+    this.inventory = result.inventory;
+    const color = selectedItem.resourceType === "wood" ? COLORS.trunk : COLORS.stone;
+    const block = this.add.rectangle(tileX, tileY, TILE_SIZE - 4, TILE_SIZE - 4, color);
+    block.setStrokeStyle(3, COLORS.outline, 0.7);
+    this.physics.add.existing(block, true);
+    this.obstacles.add(block);
+    this.placedBlocks.push(block);
+    this._recordEvent("block_placed", {
+      resourceType: selectedItem.resourceType,
+      tile: { column: Math.floor(tileX / TILE_SIZE), row: Math.floor(tileY / TILE_SIZE) },
+      inventoryCount: this.inventory[selectedItem.resourceType],
+    });
+    this._refreshInventoryHud();
+    this._showStatus("วางบล็อกแล้ว");
+  }
+
+  _refreshInventoryHud() {
+    this.hotbarSlots.forEach(({ countLabel, item }) => {
+      if (item.kind !== "BLOCK") {
+        countLabel.setText("");
+        return;
+      }
+      const count = this.inventory[item.resourceType];
+      countLabel.setText(count > 0 ? String(count) : "");
+    });
+  }
+
+  _recordEvent(type, payload) {
+    this.eventLog.push(
+      Object.freeze({
+        type,
+        payload: Object.freeze({ ...payload }),
+        occurredAt: new Date().toISOString(),
+      }),
+    );
+  }
+
+  _showStatus(message) {
+    this.statusLabel.setText(message).setVisible(true).setAlpha(1);
+    this.tweens.killTweensOf(this.statusLabel);
+    this.tweens.add({
+      targets: this.statusLabel,
+      alpha: 0,
+      delay: 900,
+      duration: 350,
+      onComplete: () => this.statusLabel.setVisible(false),
+    });
   }
 }
