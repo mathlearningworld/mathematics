@@ -1,0 +1,56 @@
+{
+  "manifestVersion": 1,
+  "sliceId": "BUILDERS_VALLEY_ART_VERTICAL_SLICE_V1",
+  "style": {
+    "projection": "ORTHOGRAPHIC_THREE_QUARTER_TOP_DOWN",
+    "grid": "RECTANGULAR",
+    "tileSize": [32, 32],
+    "characterFrame": [32, 48],
+    "filter": "NEAREST_NEIGHBOR",
+    "lightDirection": "UPPER_LEFT"
+  },
+  "assets": [
+    {
+      "assetId": "BV_PLAYER_BUILDER_01",
+      "category": "character",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "bottom-center"
+    },
+    {
+      "assetId": "BV_TREE_OAK_01",
+      "category": "resource",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "bottom-center"
+    },
+    {
+      "assetId": "BV_ROCK_FIELD_01",
+      "category": "resource",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "bottom-center"
+    },
+    {
+      "assetId": "BV_BLOCK_WOOD_01",
+      "category": "building-block",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "bottom-center"
+    },
+    {
+      "assetId": "BV_BLOCK_STONE_01",
+      "category": "building-block",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "bottom-center"
+    },
+    {
+      "assetId": "BV_TERRAIN_GRASS_STREAM_01",
+      "category": "terrain",
+      "source": "frontend/src/sandbox/art/pixelArtFactory.js",
+      "license": "PROJECT_ORIGINAL_CODE_GENERATED",
+      "anchor": "world"
+    }
+  ]
+}
