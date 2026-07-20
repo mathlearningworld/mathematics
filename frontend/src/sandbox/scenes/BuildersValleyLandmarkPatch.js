@@ -49,21 +49,20 @@ function addLandmark(scene, frame, x, y, options = {}) {
   return image;
 }
 
-function addPath(scene, landmarks, points, cluster, alpha = 0.9, options = {}) {
-  points.forEach(([x, y], index) => {
-    landmarks.push(
-      addLandmark(scene, "dirtPath", x, y, {
-        assetId: `${cluster}_PATH_${String(index + 1).padStart(2, "0")}`,
-        cluster,
-        layer: options.layer ?? "GROUND",
-        originY: 0.5,
-        depth: options.depth ?? 18,
-        alpha,
-        scaleX: options.scaleX,
-        scaleY: options.scaleY,
-      }),
-    );
-  });
+function addPathTile(scene, landmarks, x, y, assetId, cluster, options = {}) {
+  landmarks.push(
+    addLandmark(scene, "dirtPath", x, y, {
+      assetId,
+      cluster,
+      layer: options.layer ?? "GROUND",
+      originY: 0.5,
+      depth: options.depth ?? 18,
+      alpha: options.alpha ?? 0.88,
+      scaleX: options.scaleX ?? 1,
+      scaleY: options.scaleY ?? 1,
+      angle: options.angle ?? 0,
+    }),
+  );
 }
 
 function addGrassCluster(scene, landmarks, x, y, cluster, options = {}) {
@@ -83,28 +82,39 @@ function addGrassCluster(scene, landmarks, x, y, cluster, options = {}) {
 
 function composeBridgeGateway(scene, landmarks, bridgeY, westBankX, eastBankX, riverCenterX) {
   const bridgeScaleX = 1.72;
-  const bridgeScaleY = 1.08;
   const bridgeBottomY = bridgeY + 24;
 
-  // Split bridge presentation into a low body and a narrow foreground rail.
-  // The player can visually pass across the deck while only the near rail may
-  // overlap their feet, avoiding the previous solid-gate appearance.
+  // A continuous low deck is established first. The bridge body now acts as
+  // material and edge detail instead of reading as a solid barrier.
+  [-88, -44, 0, 44, 88].forEach((dx, index) => {
+    addPathTile(
+      scene,
+      landmarks,
+      riverCenterX + dx,
+      bridgeY + 40,
+      `BV_BRIDGE_DECK_TILE_${String(index + 1).padStart(2, "0")}`,
+      "BRIDGE_GATEWAY",
+      { layer: "BRIDGE_DECK", depth: 72 + bridgeY, alpha: 0.96, scaleX: 1.08, scaleY: 0.78 },
+    );
+  });
+
   landmarks.push(
     addLandmark(scene, "bridgeBody", riverCenterX, bridgeBottomY, {
       assetId: "BV_BRIDGE_WOOD_MODULE_01_BODY",
       cluster: "BRIDGE_GATEWAY",
       layer: "BRIDGE_BODY",
       scaleX: bridgeScaleX,
-      scaleY: bridgeScaleY,
-      depth: 90 + bridgeY,
+      scaleY: 0.72,
+      depth: 82 + bridgeY,
     }),
-    addLandmark(scene, "bridgeFrontRail", riverCenterX, bridgeBottomY + 1, {
+    addLandmark(scene, "bridgeFrontRail", riverCenterX, bridgeBottomY + 16, {
       assetId: "BV_BRIDGE_WOOD_MODULE_01_FRONT_RAIL",
       cluster: "BRIDGE_GATEWAY",
       layer: "FOREGROUND_RAIL",
       scaleX: bridgeScaleX,
-      scaleY: bridgeScaleY,
-      depth: 900 + bridgeY,
+      scaleY: 0.58,
+      depth: 720 + bridgeY,
+      alpha: 0.9,
     }),
     addLandmark(scene, "lantern", westBankX - 34, bridgeY - 16, {
       assetId: "BV_LANTERN_POST_01_WEST",
@@ -119,83 +129,76 @@ function composeBridgeGateway(scene, landmarks, bridgeY, westBankX, eastBankX, r
     }),
   );
 
-  // River-bank transitions sit beside the approach instead of blocking it.
+  // River-bank details sit outside the walking line.
   landmarks.push(
-    addLandmark(scene, "cliff", westBankX - 150, bridgeY + 66, {
+    addLandmark(scene, "cliff", westBankX - 150, bridgeY + 70, {
       assetId: "BV_RIVER_BANK_01_BRIDGE_WEST",
       cluster: "BRIDGE_GATEWAY",
       layer: "RIVER_BANK",
       originX: 0,
-      scaleX: 0.9,
-      scaleY: 0.48,
+      scaleX: 0.84,
+      scaleY: 0.38,
       depth: 22,
-      alpha: 0.92,
+      alpha: 0.86,
     }),
-    addLandmark(scene, "cliff", eastBankX + 48, bridgeY + 66, {
+    addLandmark(scene, "cliff", eastBankX + 56, bridgeY + 70, {
       assetId: "BV_RIVER_BANK_01_BRIDGE_EAST",
       cluster: "BRIDGE_GATEWAY",
       layer: "RIVER_BANK",
       originX: 0,
-      scaleX: 0.9,
-      scaleY: 0.48,
+      scaleX: 0.84,
+      scaleY: 0.38,
       depth: 22,
       flipX: true,
-      alpha: 0.92,
+      alpha: 0.86,
     }),
   );
 
-  addPath(
-    scene,
-    landmarks,
-    [
-      [riverCenterX - 176, bridgeY + 38],
-      [riverCenterX - 132, bridgeY + 38],
-      [riverCenterX - 88, bridgeY + 38],
-      [riverCenterX - 44, bridgeY + 38],
-      [riverCenterX, bridgeY + 38],
-      [riverCenterX + 44, bridgeY + 38],
-      [riverCenterX + 88, bridgeY + 38],
-      [riverCenterX + 132, bridgeY + 38],
-      [riverCenterX + 176, bridgeY + 38],
-    ],
-    "BRIDGE_GATEWAY",
-    0.92,
-  );
+  [-176, -132, -88, -44, 132, 176].forEach((dx, index) => {
+    addPathTile(
+      scene,
+      landmarks,
+      riverCenterX + dx,
+      bridgeY + 40,
+      `BRIDGE_GATEWAY_APPROACH_${String(index + 1).padStart(2, "0")}`,
+      "BRIDGE_GATEWAY",
+      { alpha: 0.88 },
+    );
+  });
 
-  addGrassCluster(scene, landmarks, westBankX - 108, bridgeY - 8, "BRIDGE_GATEWAY", {
-    id: "WEST_01",
-    scale: 0.66,
-  });
-  addGrassCluster(scene, landmarks, westBankX - 72, bridgeY + 82, "BRIDGE_GATEWAY", {
-    id: "WEST_02",
-    scale: 0.54,
-    flipX: true,
-  });
-  addGrassCluster(scene, landmarks, eastBankX + 92, bridgeY - 6, "BRIDGE_GATEWAY", {
-    id: "EAST_01",
-    scale: 0.66,
-    flipX: true,
-  });
-  addGrassCluster(scene, landmarks, eastBankX + 140, bridgeY + 80, "BRIDGE_GATEWAY", {
-    id: "EAST_02",
-    scale: 0.54,
-  });
+  addGrassCluster(scene, landmarks, westBankX - 108, bridgeY - 8, "BRIDGE_GATEWAY", { id: "WEST_01", scale: 0.66 });
+  addGrassCluster(scene, landmarks, westBankX - 72, bridgeY + 82, "BRIDGE_GATEWAY", { id: "WEST_02", scale: 0.54, flipX: true });
+  addGrassCluster(scene, landmarks, eastBankX + 92, bridgeY - 6, "BRIDGE_GATEWAY", { id: "EAST_01", scale: 0.66, flipX: true });
+  addGrassCluster(scene, landmarks, eastBankX + 140, bridgeY + 80, "BRIDGE_GATEWAY", { id: "EAST_02", scale: 0.54 });
 }
 
 function composeWorkshopYard(scene, landmarks, bridgeY, eastBankX) {
-  const workshopX = eastBankX + 150;
-  const workshopY = bridgeY - 56;
+  const workshopX = eastBankX + 142;
+  const workshopY = bridgeY - 50;
 
-  // A compact ground pad makes the workshop read as a used place rather than
-  // loose props on grass. Existing path tiles are reused as authored ground.
-  const groundPoints = [];
-  [-44, 0, 44].forEach((dx) => {
-    [-8, 36].forEach((dy) => groundPoints.push([workshopX + dx, workshopY + 66 + dy]));
-  });
-  addPath(scene, landmarks, groundPoints, "WORKSHOP_GROUND", 0.76, {
-    depth: 17,
-    scaleX: 1.04,
-    scaleY: 0.92,
+  // Irregular authored footprint. Missing corners, varied scale and small angle
+  // changes prevent the ground from reading as a rectangular tile pad.
+  const groundLayout = [
+    [-54, 48, 1.04, 0.82, -2],
+    [-10, 44, 1.08, 0.86, 1],
+    [34, 48, 1.0, 0.82, 0],
+    [70, 58, 0.82, 0.74, 2],
+    [-40, 84, 0.88, 0.72, 1],
+    [4, 88, 1.02, 0.78, -1],
+    [48, 88, 0.92, 0.74, 1],
+    [82, 98, 0.68, 0.62, -2],
+    [-4, 122, 0.72, 0.58, 2],
+  ];
+  groundLayout.forEach(([dx, dy, scaleX, scaleY, angle], index) => {
+    addPathTile(
+      scene,
+      landmarks,
+      workshopX + dx,
+      workshopY + dy,
+      `WORKSHOP_GROUND_TILE_${String(index + 1).padStart(2, "0")}`,
+      "WORKSHOP_GROUND",
+      { depth: 17, alpha: 0.72 + (index % 3) * 0.04, scaleX, scaleY, angle },
+    );
   });
 
   landmarks.push(
@@ -204,26 +207,24 @@ function composeWorkshopYard(scene, landmarks, bridgeY, eastBankX) {
       cluster: "WORKSHOP_YARD",
       scale: 1.08,
     }),
-    addLandmark(scene, "crate", workshopX - 72, workshopY + 54, {
+    addLandmark(scene, "crate", workshopX - 60, workshopY + 56, {
       assetId: "BV_CRATE_01_WORKSHOP",
+      cluster: "WORKSHOP_YARD",
+      scale: 0.82,
+    }),
+    addLandmark(scene, "barrel", workshopX + 54, workshopY + 62, {
+      assetId: "BV_BARREL_01_WORKSHOP",
       cluster: "WORKSHOP_YARD",
       scale: 0.84,
     }),
-    addLandmark(scene, "barrel", workshopX + 66, workshopY + 58, {
-      assetId: "BV_BARREL_01_WORKSHOP",
-      cluster: "WORKSHOP_YARD",
-      scale: 0.86,
-    }),
-    addLandmark(scene, "crate", workshopX + 96, workshopY + 82, {
+    addLandmark(scene, "crate", workshopX + 78, workshopY + 88, {
       assetId: "BV_CRATE_02_WORKSHOP",
       cluster: "WORKSHOP_YARD",
-      scale: 0.56,
+      scale: 0.54,
       flipX: true,
       alpha: 0.94,
     }),
-    // Move the workshop lamp deeper into the yard so it no longer duplicates
-    // the east bridge entrance lamp.
-    addLandmark(scene, "lantern", workshopX + 126, workshopY + 10, {
+    addLandmark(scene, "lantern", workshopX + 122, workshopY + 16, {
       assetId: "BV_LANTERN_POST_02_WORKSHOP",
       cluster: "WORKSHOP_YARD",
       scale: 0.68,
@@ -231,33 +232,22 @@ function composeWorkshopYard(scene, landmarks, bridgeY, eastBankX) {
     }),
   );
 
-  addPath(
-    scene,
-    landmarks,
-    [
-      [eastBankX + 62, bridgeY + 80],
-      [eastBankX + 92, bridgeY + 58],
-      [eastBankX + 120, bridgeY + 34],
-      [workshopX - 26, workshopY + 102],
-    ],
-    "WORKSHOP_APPROACH",
-    0.78,
+  [[eastBankX + 64, bridgeY + 78], [eastBankX + 92, bridgeY + 58], [eastBankX + 118, bridgeY + 38]].forEach(
+    ([x, y], index) => {
+      addPathTile(scene, landmarks, x, y, `WORKSHOP_APPROACH_${String(index + 1).padStart(2, "0")}`, "WORKSHOP_APPROACH", {
+        alpha: 0.74,
+        scaleX: 0.9,
+        scaleY: 0.72,
+        angle: index - 1,
+      });
+    },
   );
 
-  addGrassCluster(scene, landmarks, workshopX - 122, workshopY + 90, "WORKSHOP_YARD", {
-    id: "01",
-    scale: 0.5,
-  });
-  addGrassCluster(scene, landmarks, workshopX + 126, workshopY + 58, "WORKSHOP_YARD", {
-    id: "02",
-    scale: 0.54,
-    flipX: true,
-  });
-  addGrassCluster(scene, landmarks, workshopX + 18, workshopY + 110, "WORKSHOP_YARD", {
-    id: "03",
-    scale: 0.44,
-    alpha: 0.7,
-  });
+  // Grass pushes into the edge to soften the authored footprint.
+  addGrassCluster(scene, landmarks, workshopX - 112, workshopY + 82, "WORKSHOP_YARD", { id: "EDGE_01", scale: 0.48 });
+  addGrassCluster(scene, landmarks, workshopX + 106, workshopY + 66, "WORKSHOP_YARD", { id: "EDGE_02", scale: 0.5, flipX: true });
+  addGrassCluster(scene, landmarks, workshopX + 24, workshopY + 118, "WORKSHOP_YARD", { id: "EDGE_03", scale: 0.42, alpha: 0.68 });
+  addGrassCluster(scene, landmarks, workshopX - 30, workshopY + 94, "WORKSHOP_YARD", { id: "CONTACT_01", scale: 0.32, alpha: 0.62, flipX: true });
 }
 
 function composeFieldPockets(scene, landmarks) {
@@ -301,7 +291,7 @@ function composeLandmarks(scene) {
 
   if (window.__BUILDERS_VALLEY__) {
     window.__BUILDERS_VALLEY__.landmarkPack = "BUILDERS_VALLEY_ENVIRONMENT_LANDMARK_PACK_V1";
-    window.__BUILDERS_VALLEY__.composition = "BUILDERS_VALLEY_WORLD_COMPOSITION_V1_1";
+    window.__BUILDERS_VALLEY__.composition = "BUILDERS_VALLEY_WORLD_COMPOSITION_V1_2";
     window.__BUILDERS_VALLEY__.getLandmarks = () =>
       landmarks.map((landmark) => ({
         assetId: landmark.getData("assetId"),
