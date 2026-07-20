@@ -50,6 +50,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.eventLog = [];
     this.statusLabel = null;
     this.lastFacing = "right";
+    this.lastInteractionDirection = { x: 1, y: 0 };
   }
 
   create() {
@@ -102,7 +103,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     this._readHotbarInput();
 
     if (this.actionKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))) {
-      this._tryCollectResource();
+      this._tryUseSelectedItem();
     }
   }
 
@@ -115,9 +116,20 @@ export class BuildersValleyScene extends Phaser.Scene {
   }
 
   _updatePlayerVisual(time, movement) {
-    if (movement.moving && Math.abs(movement.velocityX) > 1) {
-      this.lastFacing = movement.velocityX < 0 ? "left" : "right";
-      this.player.setFacing(this.lastFacing);
+    if (movement.moving) {
+      if (Math.abs(movement.velocityX) >= Math.abs(movement.velocityY)) {
+        this.lastInteractionDirection = {
+          x: movement.velocityX < 0 ? -1 : 1,
+          y: 0,
+        };
+        this.lastFacing = movement.velocityX < 0 ? "left" : "right";
+        this.player.setFacing(this.lastFacing);
+      } else {
+        this.lastInteractionDirection = {
+          x: 0,
+          y: movement.velocityY < 0 ? -1 : 1,
+        };
+      }
     }
     this.player.setWalkingFrame(time, movement.moving);
   }
@@ -250,7 +262,7 @@ export class BuildersValleyScene extends Phaser.Scene {
     );
 
     this.add
-      .text(18, camera.height - 42, "WASD / ลูกศร • Shift วิ่ง • 1–5 เลือก", {
+      .text(18, camera.height - 42, "WASD / ลูกศร • Shift วิ่ง • 1–5 เลือก • Space ใช้", {
         fontFamily: "monospace",
         fontSize: "14px",
         color: "#ffffff",
@@ -334,6 +346,26 @@ export class BuildersValleyScene extends Phaser.Scene {
     this.targetIndicator
       .setVisible(Boolean(nearest))
       .setPosition(nearest?.x ?? 0, (nearest?.y ?? 0) - 12);
+  }
+
+  _tryUseSelectedItem() {
+    const selectedItem = HOTBAR_ITEMS[this.selectedSlot];
+
+    if (selectedItem.kind === "BLOCK") {
+      const placementPoint = this._getFrontPlacementPoint();
+      this._tryPlaceSelectedBlock(placementPoint.x, placementPoint.y);
+      return;
+    }
+
+    this._tryCollectResource();
+  }
+
+  _getFrontPlacementPoint() {
+    const direction = this.lastInteractionDirection ?? { x: 1, y: 0 };
+    return {
+      x: this.player.x + direction.x * TILE_SIZE,
+      y: this.player.y + direction.y * TILE_SIZE,
+    };
   }
 
   _tryCollectResource(resource = this.targetResource) {
