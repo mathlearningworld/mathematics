@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" shape-rendering="crispEdges">
+<defs>
+<style>
+.o{fill:#231c18}.sd{fill:#2d2622;fill-opacity:.67}.wd{fill:#5c3721}.w{fill:#8e5730}.wl{fill:#c48143}
+.std{fill:#3d4446}.st{fill:#697574}.stl{fill:#9ba6a0}.m{fill:#5c6669}.g{fill:#dca641}
+.gr{fill:#579146}.gr2{fill:#66a24f}.dt{fill:#795635}.dt2{fill:#9f7446}
+</style>
+</defs>
+<g id="BV_BRIDGE_WOOD_MODULE_01">
+<rect class="sd" x="16" y="66" width="112" height="14"/>
+<rect class="o" x="16" y="26" width="10" height="48"/><rect class="wl" x="19" y="22" width="4" height="48"/>
+<rect class="o" x="112" y="26" width="10" height="48"/><rect class="wl" x="115" y="22" width="4" height="48"/>
+<rect class="o" x="20" y="26" width="100" height="5"/><rect class="wl" x="22" y="27" width="96" height="2"/>
+<rect class="o" x="20" y="74" width="100" height="5"/><rect class="wd" x="22" y="75" width="96" height="2"/>
+<g>
+<rect class="o" x="28" y="38" width="11" height="34"/><rect class="w" x="30" y="40" width="7" height="28"/><rect class="wl" x="31" y="41" width="5" height="4"/>
+<rect class="o" x="40" y="38" width="11" height="34"/><rect class="w" x="42" y="40" width="7" height="28"/>
+<rect class="o" x="52" y="38" width="11" height="34"/><rect class="w" x="54" y="40" width="7" height="28"/>
+<rect class="o" x="64" y="38" width="11" height="34"/><rect class="w" x="66" y="40" width="7" height="28"/>
+<rect class="o" x="76" y="38" width="11" height="34"/><rect class="w" x="78" y="40" width="7" height="28"/>
+<rect class="o" x="88" y="38" width="11" height="34"/><rect class="w" x="90" y="40" width="7" height="28"/>
+<rect class="o" x="100" y="38" width="11" height="34"/><rect class="w" x="102" y="40" width="7" height="28"/>
+</g></g>
+<g id="BV_WORKBENCH_01">
+<rect class="sd" x="148" y="64" width="88" height="12"/>
+<rect class="o" x="152" y="32" width="84" height="18"/><rect class="w" x="155" y="34" width="78" height="12"/>
+<rect class="wl" x="156" y="35" width="28" height="3"/><rect class="wl" x="190" y="35" width="38" height="3"/>
+<rect class="o" x="158" y="48" width="10" height="32"/><rect class="wd" x="161" y="50" width="4" height="26"/>
+<rect class="o" x="218" y="48" width="10" height="32"/><rect class="wd" x="221" y="50" width="4" height="26"/>
+<rect class="m" x="178" y="20" width="4" height="20"/><rect class="g" x="174" y="18" width="12" height="5"/>
+<rect class="m" x="200" y="22" width="4" height="18"/><rect class="stl" x="196" y="20" width="12" height="4"/>
+</g>
+<g id="BV_CRATE_01">
+<rect class="sd" x="16" y="150" width="52" height="10"/>
+<rect class="o" x="18" y="120" width="48" height="36"/><rect class="w" x="22" y="124" width="40" height="28"/>
+<rect class="wl" x="24" y="126" width="36" height="4"/><rect class="wd" x="38" y="124" width="8" height="28"/>
+<path d="M22 126L62 152M62 126L22 152" stroke="#231c18" stroke-width="4"/>
+</g>
+<g id="BV_BARREL_01">
+<ellipse class="sd" cx="103" cy="158" rx="23" ry="4"/>
+<ellipse class="o" cx="103" cy="136" rx="19" ry="19"/><rect class="w" x="91" y="122" width="24" height="30"/>
+<ellipse class="wl" cx="103" cy="125" rx="15" ry="6"/>
+<rect class="m" x="89" y="130" width="28" height="5"/><rect class="m" x="89" y="144" width="28" height="5"/>
+</g>
+<g id="BV_LANTERN_POST_01">
+<rect class="sd" x="154" y="168" width="44" height="8"/>
+<rect class="o" x="170" y="120" width="7" height="52"/><rect class="wd" x="172" y="122" width="3" height="46"/>
+<rect class="o" x="164" y="116" width="20" height="6"/><rect class="m" x="167" y="118" width="14" height="2"/>
+<rect x="160" y="122" width="28" height="28" fill="#ffc348" fill-opacity=".15"/>
+<rect class="o" x="165" y="125" width="18" height="20"/><rect x="168" y="128" width="12" height="14" fill="#ffbe40" fill-opacity=".82"/>
+<rect x="171" y="130" width="6" height="10" fill="#ffd670"/>
+</g>
+<g id="BV_DIRT_PATH_TILE_01">
+<rect class="dt" x="202" y="112" width="44" height="44"/>
+<path class="dt2" d="M206 117h6v4h-6zM220 115h6v4h-6zM233 122h6v4h-6zM211 132h6v4h-6zM227 136h6v4h-6zM238 146h6v4h-6zM215 149h6v4h-6z"/>
+<path class="wd" d="M204 124h4v3h-4zM222 127h4v3h-4zM235 114h4v3h-4zM208 143h4v3h-4zM230 150h4v3h-4z"/>
+</g>
+<g id="BV_CLIFF_EDGE_01">
+<rect class="std" x="8" y="184" width="112" height="56"/><rect class="gr" x="8" y="184" width="112" height="14"/>
+<path class="gr2" d="M8 194h10v7H8zM24 194h10v7H24zM40 194h10v7H40zM56 194h10v7H56zM72 194h10v7H72zM88 194h10v7H88zM104 194h10v7h-10z"/>
+<rect class="st" x="12" y="202" width="28" height="15"/><rect class="stl" x="42" y="202" width="34" height="20"/>
+<rect class="st" x="78" y="202" width="37" height="14"/><rect class="stl" x="14" y="220" width="20" height="14"/>
+<rect class="st" x="37" y="224" width="32" height="12"/><rect class="std" x="72" y="218" width="42" height="18"/>
+<path d="M40 202l-5 9 7 7M89 204l-5 9 8 9" stroke="#231c18" stroke-width="3" fill="none"/>
+</g>
+<g id="BV_GRASS_DETAILS_01">
+<path class="gr2" d="M144 229l3-10 3 10 4-8 2 8M164 212l3-10 3 10 4-8 2 8M184 232l3-10 3 10 4-8 2 8M208 216l3-10 3 10 4-8 2 8M227 234l3-10 3 10 4-8 2 8"/>
+<g><rect class="gr" x="155" y="224" width="3" height="10"/><rect x="152" y="222" width="9" height="5" fill="#f2c44a"/></g>
+<g><rect class="gr" x="193" y="204" width="3" height="10"/><rect x="190" y="202" width="9" height="5" fill="#eb7d8f"/></g>
+<g><rect class="gr" x="223" y="219" width="3" height="10"/><rect x="220" y="217" width="9" height="5" fill="#d6d3f5"/></g>
+</g>
+</svg>
