@@ -6,14 +6,25 @@ const originalCreateHotbar = prototype._createHotbar;
 const originalCreateInteractionHud = prototype._createInteractionHud;
 const originalUpdate = prototype.update;
 
-function addHudBackplate(scene) {
-  if (scene.__visualHudBackplate) return;
-
+function getHotbarGeometry(scene) {
   const camera = scene.cameras.main;
   const slotSpan = BV_UI.hotbar.slotSize * 5 + BV_UI.hotbar.slotGap * 4;
   const panelWidth = slotSpan + BV_UI.hotbar.panelPaddingX * 2;
   const panelHeight = BV_UI.hotbar.slotSize + BV_UI.hotbar.panelPaddingY * 2;
-  const panelY = camera.height - BV_UI.hotbar.yOffset;
+
+  return {
+    camera,
+    panelWidth,
+    panelHeight,
+    panelY: camera.height - BV_UI.hotbar.yOffset,
+    panelLeft: camera.width / 2 - panelWidth / 2,
+  };
+}
+
+function addHudBackplate(scene) {
+  if (scene.__visualHudBackplate) return;
+
+  const { camera, panelWidth, panelHeight, panelY } = getHotbarGeometry(scene);
 
   const shadow = scene.add
     .rectangle(camera.width / 2 + 4, panelY + 5, panelWidth + 10, panelHeight + 10, BV_UI.colors.shadow, 0.72)
@@ -41,15 +52,19 @@ function styleControlHint(scene) {
   );
   if (!hint) return;
 
+  const { camera, panelLeft } = getHotbarGeometry(scene);
+  const availableWidth = Math.max(240, panelLeft - 42);
+
   hint
-    .setText("เคลื่อนที่  WASD/ลูกศร   •   วิ่ง  Shift   •   ใช้งาน  Space")
+    .setText("WASD เดิน  •  Shift วิ่ง  •  Space ใช้")
     .setFontFamily(BV_UI.typography.family)
     .setFontSize(BV_UI.typography.hintSize)
     .setColor(BV_UI.colors.textSecondary)
     .setBackgroundColor("#0b1720e6")
-    .setPadding(12, 7, 12, 7)
-    .setPosition(18, scene.cameras.main.height - 18)
-    .setAlpha(0.88);
+    .setPadding(10, 6, 10, 6)
+    .setWordWrapWidth(availableWidth, false)
+    .setPosition(18, camera.height - 18)
+    .setAlpha(0.82);
 
   scene.__visualControlHint = hint;
 }
