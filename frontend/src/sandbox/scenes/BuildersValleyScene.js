@@ -394,6 +394,7 @@ export class BuildersValleyScene extends Phaser.Scene {
       inventoryCount: this.inventory[resourceType],
     });
     this.resourceNodes = this.resourceNodes.filter((node) => node !== resource);
+    this.placedBlocks = this.placedBlocks.filter((block) => block !== resource);
     resource.disableInteractive();
     if (resource.body) resource.body.enable = false;
     this.obstacles.remove(resource, false, false);
@@ -442,11 +443,21 @@ export class BuildersValleyScene extends Phaser.Scene {
 
     this.inventory = result.inventory;
     const block = createPlacedBlock(this, tileX, tileY, selectedItem.resourceType);
-    block.setData("assetId", selectedItem.resourceType === "wood" ? "BV_BLOCK_WOOD_01" : "BV_BLOCK_STONE_01");
+    block.setData({
+      assetId: selectedItem.resourceType === "wood" ? "BV_BLOCK_WOOD_01" : "BV_BLOCK_STONE_01",
+      resourceType: selectedItem.resourceType,
+      requiredTool: selectedItem.resourceType === "wood" ? "axe" : "pickaxe",
+    });
+    block.setInteractive({ useHandCursor: true });
+    block.on("pointerdown", (pointer, localX, localY, event) => {
+      event.stopPropagation();
+      this._tryCollectResource(block);
+    });
     this.physics.add.existing(block, true);
     block.body.setSize(28, 22);
     this.obstacles.add(block);
     this.placedBlocks.push(block);
+    this.resourceNodes.push(block);
     spawnPixelBurst(this, tileX, tileY, selectedItem.resourceType);
     this._recordEvent("block_placed", {
       resourceType: selectedItem.resourceType,
