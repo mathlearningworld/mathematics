@@ -99,10 +99,19 @@ export class BuildersValleyScene extends Phaser.Scene {
     this._updatePlayerVisual(time, movement);
     this._updateDepths();
     this._updateTargetResource();
+    this._readHotbarInput();
 
     if (this.actionKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))) {
       this._tryCollectResource();
     }
+  }
+
+  _readHotbarInput() {
+    this.hotbarKeys.forEach((key, index) => {
+      if (Phaser.Input.Keyboard.JustDown(key)) {
+        this._selectHotbarSlot(index);
+      }
+    });
   }
 
   _updatePlayerVisual(time, movement) {
@@ -211,7 +220,13 @@ export class BuildersValleyScene extends Phaser.Scene {
         })
         .setOrigin(1, 1);
 
-      slot.on("pointerdown", () => this._selectHotbarSlot(index));
+      const selectSlot = (pointer, localX, localY, event) => {
+        event?.stopPropagation();
+        this._selectHotbarSlot(index);
+      };
+      slot.on("pointerdown", selectSlot);
+      icon.setSize(42, 42).setInteractive({ useHandCursor: true });
+      icon.on("pointerdown", selectSlot);
       this.hotbarSlots.push({ slot, icon, keyLabel, countLabel, item });
       hotbar.add([slot, icon, keyLabel, countLabel]);
     });
@@ -223,11 +238,9 @@ export class BuildersValleyScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.FOUR,
       Phaser.Input.Keyboard.KeyCodes.FIVE,
     ];
-    this.hotbarKeys = keyCodes.map((keyCode, index) => {
-      const key = this.input.keyboard.addKey(keyCode);
-      key.on("down", () => this._selectHotbarSlot(index));
-      return key;
-    });
+    this.hotbarKeys = keyCodes.map((keyCode) =>
+      this.input.keyboard.addKey(keyCode, false, true),
+    );
 
     this.add
       .text(18, camera.height - 42, "WASD / ลูกศร • Shift วิ่ง • 1–5 เลือก", {
@@ -342,7 +355,12 @@ export class BuildersValleyScene extends Phaser.Scene {
       inventoryCount: this.inventory[resourceType],
     });
     this.resourceNodes = this.resourceNodes.filter((node) => node !== resource);
-    resource.destroy();
+    resource.disableInteractive();
+    if (resource.body) resource.body.enable = false;
+    this.obstacles.remove(resource, false, false);
+    this.time.delayedCall(0, () => {
+      if (resource.active) resource.destroy();
+    });
     spawnPixelBurst(this, resourceX, resourceY, resourceType);
     this.targetResource = null;
     this.targetIndicator.setVisible(false);
