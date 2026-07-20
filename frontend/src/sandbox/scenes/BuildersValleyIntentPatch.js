@@ -34,7 +34,11 @@ function autoSelect(scene, index) {
 prototype._selectHotbarSlot = function selectHotbarSlotWithIntent(index) {
   originalSelectHotbarSlot.call(this, index);
 
-  if (!this.__intentAutoSelecting && !this.__intentCollecting) {
+  if (
+    !this.__intentAutoSelecting &&
+    !this.__intentCollecting &&
+    !this.__intentContextUpdating
+  ) {
     this.__placementIntentMaterial = null;
     this.__lastPlacedIntentTarget = null;
   }
@@ -86,7 +90,13 @@ prototype._tryPlaceSelectedBlock = function placeBlockWithIntent(worldX, worldY)
 
 prototype._updateTargetResource = function updateTargetWithIntent() {
   const previousTarget = this.targetResource;
-  originalUpdateTargetResource.call(this);
+
+  this.__intentContextUpdating = true;
+  try {
+    originalUpdateTargetResource.call(this);
+  } finally {
+    this.__intentContextUpdating = false;
+  }
 
   const currentTarget = this.targetResource;
   const targetChanged = currentTarget !== previousTarget;
