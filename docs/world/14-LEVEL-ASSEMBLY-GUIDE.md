@@ -424,3 +424,305 @@ Zone Assembly Order is accepted when the production team can demonstrate that:
 - the final journey can be reviewed continuously from Arrival Overlook to Workshop Functional Core.
 
 Until this gate passes, detailed terrain, water, vegetation, landmark, and workshop assembly may proceed only as controlled blockout or prototype work.
+
+## 3 Terrain Assembly
+
+### 3.1 Terrain Objective
+
+Terrain is the structural authority for Builder's Valley. It establishes the playable envelope, route grades, river logic, landmark foundations, camera framing, environmental boundaries, and the physical conditions required by every downstream assembly layer.
+
+The terrain pass must produce the smallest stable landform that supports the complete journey from Arrival Overlook to Workshop Functional Core. Terrain detail is not accepted when it merely appears natural; it is accepted when it provides correct scale, readable movement, coherent water flow, stable foundations, and measurable runtime behavior.
+
+Terrain decisions must preserve this priority order:
+
+```text
+Traversal and Functional Space
+→ Zone Elevation Relationships
+→ River and Drainage Logic
+→ Landmark Foundations
+→ Valley Silhouette and Composition
+→ Surface Material Readability
+→ Micro Detail
+```
+
+### 3.2 Authoritative Terrain Assembly Order
+
+Terrain must be assembled in the following order:
+
+```text
+Slice Bounds and World Metrics
+→ Valley Envelope
+→ Primary Elevation Bands
+→ River Channel and Waterfall Cut
+→ Traversable Route Grades
+→ Landmark Foundation Pads
+→ Cliff and Boundary Masses
+→ Shoreline and Bank Transitions
+→ Terrain Collision
+→ Terrain Material Layers
+→ Controlled Surface Variation
+→ Runtime and Evidence Pass
+```
+
+Later terrain work must not conceal unresolved scale, grade, route, or foundation problems. Material painting, decals, scatter, and micro erosion are downstream detail and cannot be used as evidence that structural terrain is complete.
+
+### 3.3 Terrain Blockout
+
+The blockout pass establishes the macro geometry using simple, editable forms. It must define:
+
+- the total production slice boundary;
+- playable, visible-supporting, and excluded terrain regions;
+- valley-floor width and longitudinal direction;
+- arrival elevation and descent relationship;
+- river source, corridor, crossing, and downstream direction;
+- waterfall crest, vertical drop, and receiving basin;
+- bridge approach grades and support elevations;
+- workshop terrace elevation, footprint, and access route;
+- valley walls, ridges, cliffs, and non-playable enclosure;
+- background silhouette limits and camera-safe horizon.
+
+Terrain blockout remains deliberately low-frequency. Fine sculpting is prohibited until the macro route, elevation bands, and foundation locations pass review.
+
+Required blockout views are:
+
+1. top-down slice overview;
+2. longitudinal elevation view from Arrival Overlook to Workshop Terrace;
+3. river-axis view from waterfall source toward bridge crossing;
+4. arrival gameplay camera view;
+5. bridge approach gameplay camera view;
+6. workshop arrival gameplay camera view.
+
+### 3.4 Elevation System
+
+Builder's Valley elevation must read as one coherent system rather than a collection of unrelated platforms.
+
+The required elevation hierarchy is:
+
+| Elevation Element | Required Relationship |
+|---|---|
+| Arrival Overlook | Highest controlled player orientation point within the primary journey |
+| Arrival Path | Continuous descent toward the valley floor without hidden traversal traps |
+| River Corridor | Lower natural spine that preserves visible water direction |
+| Waterfall Crest | Clearly above the receiving basin and aligned with the river source |
+| Bridge Crossing | High enough to clear the water corridor while maintaining readable approaches |
+| Workshop Terrace | Stable destination plane connected naturally from the bridge exit |
+| Supporting Ridges | Above playable space and shaped to enclose rather than confuse the route |
+
+Absolute numeric values are engine and gameplay decisions, but the following rules are mandatory:
+
+- walkable grades must remain within the approved movement-controller capability;
+- transitions between grades must not create abrupt speed, grounding, or camera changes;
+- steep surfaces must read consistently as non-walkable;
+- intended drops must have explicit safety, recovery, or blocking treatment;
+- elevation changes must preserve landmark visibility from required viewpoints;
+- no terrain edit may create water that appears to flow uphill;
+- no foundation pad may float, intersect visibly, or rely on decorative assets to hide instability.
+
+### 3.5 Traversable Surface Contract
+
+All intended movement corridors must be protected as gameplay space before terrain decoration begins.
+
+Each traversable corridor must provide:
+
+- approved minimum clear width across its full route;
+- continuous collision without holes, steps, or snag points;
+- grade transitions compatible with player movement;
+- sufficient overhead and lateral camera clearance;
+- recovery space near turns, slopes, bridge entries, and interaction zones;
+- clear distinction between walkable and non-walkable surfaces;
+- no terrain ridge, bank, or rock socket that produces a false route;
+- no concave pocket that can trap the player or camera.
+
+Paths may use terrain, meshes, or a controlled combination, but ownership must be explicit. Overlapping terrain and mesh collision must not produce jitter, double hits, or ambiguous navigation results.
+
+Traversal validation must be performed in both travel directions where the route permits return movement.
+
+### 3.6 River and Waterfall Terrain Contract
+
+Terrain establishes the physical container for water. Phase 4 may author water surfaces and behavior only after the following terrain conditions are stable:
+
+- the river centerline and flow direction are approved;
+- channel width and depth support the intended visual scale;
+- banks frame the river without appearing uniformly artificial;
+- the waterfall crest has a credible source and controlled lip;
+- the vertical drop aligns with the receiving basin;
+- the basin provides believable outflow continuity;
+- bridge supports and approaches do not obstruct the water corridor;
+- playable edges near water have explicit safety and collision treatment;
+- shoreline transitions provide space for later foam, wetness, rock, and vegetation layers;
+- the river corridor remains readable from the Arrival Path, Waterfall Vista, and Bridge Approach.
+
+Water must not be used to hide an incomplete channel. If the terrain-water relationship fails without shaders or FX, the terrain contract has not passed.
+
+### 3.7 Landmark Foundation Pads
+
+Terrain must reserve and validate structural foundations before final landmarks are placed.
+
+| Foundation | Terrain Responsibility |
+|---|---|
+| Arrival Overlook | Stable orientation platform, protected camera foreground, and readable descent origin |
+| Waterfall Vista | Safe viewing area, clear natural-anchor sightline, and non-trapping edge treatment |
+| Bridge Crossing | Matched support elevations, stable abutment zones, approach alignment, and river clearance |
+| Workshop Terrace | Functional destination plane, access transition, drainage logic, and space for workshop interactions |
+| Workshop Functional Core | Level or intentionally graded footprints for workbench, storage, staging, and placement zones |
+
+Foundation pads must be large enough for functional and camera requirements, but must not read as unexplained artificial shelves. Their edges should be integrated structurally before vegetation, props, or decals are added.
+
+A landmark foundation change reopens the affected route, sightline, water, collision, and downstream landmark gates.
+
+### 3.8 Cliff, Ridge, and Boundary Assembly
+
+Cliffs and ridges perform three jobs: contain the player, frame composition, and create depth. They must not become arbitrary walls added only to stop traversal.
+
+Boundary terrain must:
+
+- communicate non-playable space before collision is encountered;
+- preserve the valley's primary silhouette from approved cameras;
+- avoid repetitive height, angle, and contour patterns;
+- provide controlled openings for landmarks and long sightlines;
+- prevent unintended shortcuts without creating invisible-wall dependence;
+- maintain camera clearance near playable edges;
+- support later rock and vegetation dressing without requiring excessive density;
+- remain compatible with culling and visibility partition plans.
+
+Invisible barriers may supplement clear visual boundaries, but may not replace them.
+
+### 3.9 Terrain Material Layering
+
+Terrain materials are applied only after structural terrain and traversal are approved at the required freeze level.
+
+The material hierarchy is:
+
+```text
+Base Soil or Ground
+→ Walkable Route Surface
+→ Rock and Cliff Surface
+→ Riverbank and Shoreline Surface
+→ Workshop Disturbance or Compaction
+→ Controlled Blend and Variation
+→ Optional Decal Support
+```
+
+Material application must:
+
+- reinforce walkable routes rather than create false paths;
+- distinguish cliffs and unsafe slopes from traversable ground;
+- preserve landmark and workshop contrast;
+- avoid excessive layer overlap and shader complexity;
+- maintain believable transitions at shorelines and foundations;
+- remain stable across required viewing distances;
+- use macro variation before high-frequency noise;
+- avoid painting detail that disappears at gameplay camera distance.
+
+Material count, blend complexity, texture resolution, and virtual-texture or streaming behavior must remain within the project's approved runtime budget. Until a numeric budget is established by the runtime implementation, all material costs remain provisional and must be measured before terrain acceptance.
+
+### 3.10 Controlled Surface Variation
+
+Micro variation is the final terrain-shaping layer, not a structural tool.
+
+Permitted uses include:
+
+- breaking long perfectly straight banks;
+- reducing visibly procedural slopes;
+- adding shallow erosion cues away from gameplay-critical surfaces;
+- softening transitions between foundation pads and natural terrain;
+- creating sockets for approved rocks or vegetation masses;
+- introducing low-amplitude silhouette variation in supporting terrain.
+
+Prohibited uses include:
+
+- changing an approved route grade without review;
+- narrowing a traversal corridor;
+- creating collision noise on walkable ground;
+- disturbing bridge or workshop foundations;
+- introducing shoreline gaps that break the water contract;
+- adding detail solely to hide poor macro forms.
+
+Every micro-detail pass must be reviewed from the gameplay camera. Editor-closeup quality is not an acceptance criterion.
+
+### 3.11 Terrain Collision and Runtime Controls
+
+Terrain runtime configuration must be treated as part of assembly completion.
+
+Required controls include:
+
+- collision enabled only where required by gameplay and containment;
+- simplified collision or non-colliding treatment for distant supporting terrain where appropriate;
+- no holes, seams, duplicate surfaces, or overlapping blockers in playable areas;
+- explicit walkable and non-walkable slope behavior;
+- stable player grounding across terrain-to-mesh transitions;
+- terrain chunk, section, streaming, or culling ownership documented;
+- material and texture memory measured under the target runtime configuration;
+- shadow behavior assigned according to visibility and budget;
+- debug visualization available for collision, navigation, bounds, and terrain partitions.
+
+Engine-specific numeric thresholds must be recorded in the implementation evidence rather than invented in this guide. Missing numeric targets do not permit unlimited cost; they require a provisional budget, measurement, and owner before acceptance.
+
+### 3.12 Terrain Validation Procedure
+
+Terrain validation must be conducted in this order:
+
+1. **Bounds Review** — confirm slice, playable, supporting, and excluded regions.
+2. **Scale Review** — confirm valley proportions, route length, landmark spacing, and player scale.
+3. **Elevation Review** — inspect arrival, river, bridge, waterfall, and workshop relationships.
+4. **Traversal Review** — traverse every intended route in both supported directions.
+5. **Water Contract Review** — inspect channel, banks, crest, basin, and outflow without relying on final FX.
+6. **Foundation Review** — confirm all landmark and workshop pads against their footprints.
+7. **Composition Review** — validate terrain silhouettes and sightlines from required cameras.
+8. **Collision Review** — inspect debug collision and test traps, seams, edges, and transitions.
+9. **Material Review** — confirm route readability, layer cost, and distance behavior.
+10. **Runtime Review** — measure terrain memory, draw, collision, and streaming behavior.
+11. **Evidence Capture** — record results, failures, corrections, and reviewer decision.
+
+A failure at an earlier step blocks acceptance of later steps even when later evidence appears visually successful.
+
+### 3.13 Required Terrain Evidence
+
+The terrain acceptance package must contain:
+
+- top-down view with slice and zone bounds;
+- elevation profile or equivalent debug evidence for the primary journey;
+- arrival, waterfall, bridge, and workshop gameplay-camera captures;
+- traversable-route debug view;
+- water-channel and shoreline review captures without final FX dependence;
+- bridge and workshop foundation measurements;
+- collision visualization and traversal result;
+- terrain material-layer inventory;
+- terrain partition, culling, or streaming ownership record;
+- runtime measurement or explicitly owned provisional budget;
+- known issues, deferred work, and affected downstream gates;
+- reviewer decision and applicable freeze level.
+
+Evidence must represent the current terrain revision. Evidence from a superseded heightfield, landscape, or mesh state is invalid.
+
+### 3.14 Terrain Revalidation Triggers
+
+Terrain review must reopen when any of the following changes materially:
+
+- world scale, slice bounds, or player scale reference;
+- valley-floor width, elevation range, or major silhouette;
+- arrival, river, bridge, waterfall, or workshop elevation;
+- primary route path, width, grade, or endpoint;
+- river centerline, channel width, waterfall crest, or receiving basin;
+- landmark foundation position, size, orientation, or height;
+- cliff or ridge mass affecting navigation or approved sightlines;
+- terrain collision, material system, partitioning, or streaming configuration;
+- a downstream asset reveals a terrain seam, trap, false route, or composition failure.
+
+Revalidation must identify which terrain evidence and downstream zone freeze levels are no longer valid.
+
+### 3.15 Section Exit Gate
+
+Terrain Assembly is accepted when the production team can demonstrate that:
+
+- the Builder's Valley envelope, bounds, and macro scale are approved;
+- the complete primary journey has stable and traversable elevation logic;
+- river, waterfall, basin, and shoreline terrain contracts are ready for Phase 4;
+- Arrival Overlook, Bridge Crossing, Waterfall Vista, Workshop Terrace, and Workshop Functional Core have stable foundations;
+- cliffs, ridges, and boundaries communicate containment without relying primarily on invisible walls;
+- terrain materials reinforce gameplay readability and remain within a measured or explicitly owned provisional budget;
+- collision is continuous, intentional, and validated across terrain-to-mesh transitions;
+- required terrain evidence represents the current revision;
+- material terrain changes trigger targeted downstream revalidation.
+
+Until this gate passes, Water Assembly may proceed only as controlled prototype work. Vegetation, landmark, workshop, lighting, FX, and audio work must not treat terrain-dependent placement as production-frozen.
