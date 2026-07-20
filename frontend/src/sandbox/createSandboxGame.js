@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { BuildersValleyScene } from "./scenes/BuildersValleyScene.js";
 import "./scenes/BuildersValleyIntentPatch.js";
 import "./scenes/BuildersValleyVisualPatch.js";
+import "./scenes/BuildersValleyLandmarkPatch.js";
 import {
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
