@@ -17,7 +17,9 @@ const LAYERS = Object.freeze({
   waterDetail: -18,
   bankAtmosphere: -10,
   worldLight: 9200,
-  uiFrame: 10020,
+  // The production frame is decorative chrome. Keep it below the existing
+  // hotbar container (10000) and its screen-space hit zones (10002).
+  uiFrame: 9990,
 });
 
 function seeded(column, row, salt = 0) {
