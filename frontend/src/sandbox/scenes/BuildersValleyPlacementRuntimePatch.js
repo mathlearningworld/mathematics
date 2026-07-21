@@ -14,6 +14,10 @@ const INVALID_STROKE = 0xe55b55;
 const CORNER_HALF_WIDTH = 16;
 const CORNER_HALF_HEIGHT = 13;
 const CORNER_ARM = 7;
+const VALID_ALPHA = 0.94;
+const INVALID_ALPHA = 0.72;
+const PREVIEW_DEPTH_OFFSET = 180;
+const CELL_CHANGE_DURATION_MS = 70;
 
 function cardinalDirection(scene) {
   const direction = scene.lastInteractionDirection ?? { x: 1, y: 0 };
@@ -75,9 +79,8 @@ function resolvePlacementResult(scene) {
 
   const direction = cardinalDirection(scene);
 
-  // Grid authority: placement is always the single cardinal cell adjacent to the
-  // player's current ground cell. No continuous pixel snap, nearest-socket search,
-  // hysteresis, or visual-only offset participates in the placement decision.
+  // One immutable grid result is the authority for preview, validation, and placement.
+  // Rendering may animate opacity/scale, but never interpolates the world position.
   const playerCell = {
     column: worldToCell(scene.player.x),
     row: worldToCell(scene.player.y),
@@ -122,7 +125,11 @@ function resolvePlacementResult(scene) {
 function drawCornerIndicator(graphics, valid) {
   if (!graphics) return;
   graphics.clear();
-  graphics.lineStyle(2, valid ? VALID_STROKE : INVALID_STROKE, valid ? 0.95 : 1);
+  graphics.lineStyle(
+    2,
+    valid ? VALID_STROKE : INVALID_STROKE,
+    valid ? VALID_ALPHA : INVALID_ALPHA,
+  );
 
   const left = -CORNER_HALF_WIDTH;
   const right = CORNER_HALF_WIDTH;
@@ -137,6 +144,24 @@ function drawCornerIndicator(graphics, valid) {
   graphics.lineBetween(left, bottom, left, bottom - CORNER_ARM);
   graphics.lineBetween(right, bottom, right - CORNER_ARM, bottom);
   graphics.lineBetween(right, bottom, right, bottom - CORNER_ARM);
+}
+
+function placementCellKey(result) {
+  if (result.kind !== "PLACE_BLOCK") return "NONE";
+  return `${result.cell.column}:${result.cell.row}:${result.valid ? "VALID" : "INVALID"}`;
+}
+
+function animateCellChange(scene, ghost) {
+  scene.tweens.killTweensOf(ghost.container);
+  ghost.container.setScale(0.9).setAlpha(0.45);
+  scene.tweens.add({
+    targets: ghost.container,
+    scaleX: 1,
+    scaleY: 1,
+    alpha: 1,
+    duration: CELL_CHANGE_DURATION_MS,
+    ease: "Sine.Out",
+  });
 }
 
 function publishPlacementResult(scene, result) {
@@ -158,21 +183,45 @@ function publishPlacementResult(scene, result) {
       reason: result.reason,
       updatedAt: Date.now(),
     };
+  } else {
+    scene.__placementPrediction = {
+      kind: "NONE",
+      confidence: "NONE",
+      resourceType: null,
+      target: null,
+      worldPoint: null,
+      tile: null,
+      direction: null,
+      valid: false,
+      reason: result.reason,
+      updatedAt: Date.now(),
+    };
   }
 
   const ghost = scene.__placementGhost;
   if (!ghost?.container) return;
 
   if (result.kind !== "PLACE_BLOCK") {
+    scene.tweens.killTweensOf(ghost.container);
     ghost.container.setVisible(false);
+    ghost.__placementCellKey = "NONE";
     return;
   }
 
+  // The authoritative point is applied immediately. The polish transition changes
+  // only opacity and scale, so the visible center always equals the spawn center.
   ghost.container
     .setVisible(true)
     .setPosition(result.worldPoint.x, result.worldPoint.y)
-    .setDepth(150 + result.worldPoint.y);
+    .setDepth(PREVIEW_DEPTH_OFFSET + Math.floor(result.worldPoint.y));
+
   drawCornerIndicator(ghost.corners, result.valid);
+
+  const nextKey = placementCellKey(result);
+  if (ghost.__placementCellKey !== nextKey) {
+    ghost.__placementCellKey = nextKey;
+    animateCellChange(scene, ghost);
+  }
 }
 
 prototype._resolvePlacementResult = function resolveAuthoritativePlacementResult() {
@@ -196,7 +245,7 @@ prototype._tryUseSelectedItem = function useAuthoritativePlacementResult() {
 
   const result = this._resolvePlacementResult();
   publishPlacementResult(this, result);
-  if (result.kind !== "PLACE_BLOCK") return;
+  if (result.kind !== "PLACE_BLOCK" || !result.valid) return;
 
   originalTryPlaceSelectedBlock.call(
     this,
@@ -211,7 +260,7 @@ prototype._tryPlaceSelectedBlock = function placeOnlyAtAuthoritativeResult() {
 
   const result = this._resolvePlacementResult();
   publishPlacementResult(this, result);
-  if (result.kind !== "PLACE_BLOCK") return;
+  if (result.kind !== "PLACE_BLOCK" || !result.valid) return;
 
   originalTryPlaceSelectedBlock.call(
     this,
@@ -223,8 +272,7 @@ prototype._tryPlaceSelectedBlock = function placeOnlyAtAuthoritativeResult() {
 prototype.update = function updateWithAuthoritativePlacementRuntime(time, delta) {
   originalUpdate.call(this, time, delta);
 
-  // This patch is loaded last and therefore publishes and renders the final frame
-  // authority after every legacy patch has run. Preview and placement both consume
-  // the same immutable PlacementResult object.
+  // Loaded last: this immutable result remains the final authority after legacy
+  // compatibility patches have completed their frame work.
   publishPlacementResult(this, this._resolvePlacementResult());
 };
