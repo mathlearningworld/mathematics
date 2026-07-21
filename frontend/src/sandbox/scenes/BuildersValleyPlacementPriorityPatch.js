@@ -7,8 +7,8 @@ const originalGetFrontPlacementPoint = prototype._getFrontPlacementPoint;
 
 // Placement intentionally leaves one empty tile between the player and the new block.
 const PLACEMENT_TILE_DISTANCE = 2;
-// Pickup requires the player to move genuinely close to an existing placed block.
-const PLACED_BLOCK_PICKUP_DISTANCE = 38;
+// Pickup activates only when the player is genuinely adjacent: less than one tile away.
+const PLACED_BLOCK_PICKUP_DISTANCE = TILE_SIZE * 0.85;
 const PICKUP_FORWARD_DOT_MIN = 0.25;
 const PICKUP_LATERAL_DISTANCE_MAX = TILE_SIZE * 0.65;
 
