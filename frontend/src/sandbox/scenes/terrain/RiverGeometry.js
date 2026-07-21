@@ -2,20 +2,25 @@ import { STREAM, TILE_SIZE, WORLD_HEIGHT } from "../../config/worldContract.js";
 
 const PROFILE = Object.freeze([
   Object.freeze({ y: 0, leftInset: 34, rightInset: 34 }),
-  Object.freeze({ y: 2 * TILE_SIZE, leftInset: 26, rightInset: 40 }),
-  Object.freeze({ y: 5 * TILE_SIZE, leftInset: 14, rightInset: 30 }),
-  Object.freeze({ y: 8 * TILE_SIZE, leftInset: 6, rightInset: 18 }),
-  Object.freeze({ y: 11 * TILE_SIZE, leftInset: 18, rightInset: 8 }),
+  Object.freeze({ y: 2 * TILE_SIZE, leftInset: 27, rightInset: 39 }),
+  Object.freeze({ y: 5 * TILE_SIZE, leftInset: 15, rightInset: 30 }),
+  Object.freeze({ y: 8 * TILE_SIZE, leftInset: 7, rightInset: 19 }),
+  Object.freeze({ y: 11 * TILE_SIZE, leftInset: 17, rightInset: 9 }),
   Object.freeze({ y: 14 * TILE_SIZE, leftInset: 8, rightInset: 8 }),
-  Object.freeze({ y: 17 * TILE_SIZE, leftInset: 16, rightInset: 22 }),
-  Object.freeze({ y: 21 * TILE_SIZE, leftInset: 4, rightInset: 14 }),
-  Object.freeze({ y: 25 * TILE_SIZE, leftInset: 12, rightInset: 4 }),
-  Object.freeze({ y: 29 * TILE_SIZE, leftInset: 24, rightInset: 12 }),
+  Object.freeze({ y: 17 * TILE_SIZE, leftInset: 15, rightInset: 21 }),
+  Object.freeze({ y: 21 * TILE_SIZE, leftInset: 5, rightInset: 14 }),
+  Object.freeze({ y: 25 * TILE_SIZE, leftInset: 12, rightInset: 5 }),
+  Object.freeze({ y: 29 * TILE_SIZE, leftInset: 23, rightInset: 12 }),
   Object.freeze({ y: WORLD_HEIGHT, leftInset: 18, rightInset: 22 }),
 ]);
 
+function smoothstep(value) {
+  const t = Math.max(0, Math.min(1, value));
+  return t * t * (3 - 2 * t);
+}
+
 function interpolate(start, end, ratio) {
-  return start + (end - start) * ratio;
+  return start + (end - start) * smoothstep(ratio);
 }
 
 function sampleProfile(y) {
@@ -33,49 +38,59 @@ function sampleProfile(y) {
   };
 }
 
+function buildInsetEdges(leftEdge, rightEdge, inset) {
+  return Object.freeze({
+    left: Object.freeze(leftEdge.map((point) => Object.freeze({ x: point.x + inset, y: point.y }))),
+    right: Object.freeze(rightEdge.map((point) => Object.freeze({ x: point.x - inset, y: point.y }))),
+  });
+}
+
 export function createRiverGeometry() {
-  const segmentHeight = 2 * TILE_SIZE;
-  const segments = [];
+  const sampleStep = TILE_SIZE;
   const leftEdge = [];
   const rightEdge = [];
 
-  for (let top = 0, index = 0; top < WORLD_HEIGHT; top += segmentHeight, index += 1) {
-    const height = Math.min(segmentHeight, WORLD_HEIGHT - top);
-    const topProfile = sampleProfile(top);
-    const bottomProfile = sampleProfile(top + height);
-    const topLeft = STREAM.left + topProfile.leftInset;
-    const topRight = STREAM.left + STREAM.width - topProfile.rightInset;
-    const bottomLeft = STREAM.left + bottomProfile.leftInset;
-    const bottomRight = STREAM.left + STREAM.width - bottomProfile.rightInset;
-
-    segments.push(Object.freeze({
-      index,
-      top,
-      height,
-      centerY: top + height / 2,
-      topLeft,
-      topRight,
-      bottomLeft,
-      bottomRight,
-      left: (topLeft + bottomLeft) / 2,
-      right: (topRight + bottomRight) / 2,
-    }));
-
-    if (index === 0) {
-      leftEdge.push(Object.freeze({ x: topLeft, y: top }));
-      rightEdge.push(Object.freeze({ x: topRight, y: top }));
-    }
-    leftEdge.push(Object.freeze({ x: bottomLeft, y: top + height }));
-    rightEdge.push(Object.freeze({ x: bottomRight, y: top + height }));
+  for (let y = 0; y <= WORLD_HEIGHT; y += sampleStep) {
+    const clampedY = Math.min(y, WORLD_HEIGHT);
+    const profile = sampleProfile(clampedY);
+    leftEdge.push(Object.freeze({ x: STREAM.left + profile.leftInset, y: clampedY }));
+    rightEdge.push(Object.freeze({ x: STREAM.left + STREAM.width - profile.rightInset, y: clampedY }));
   }
+
+  if (leftEdge.at(-1)?.y !== WORLD_HEIGHT) {
+    const profile = sampleProfile(WORLD_HEIGHT);
+    leftEdge.push(Object.freeze({ x: STREAM.left + profile.leftInset, y: WORLD_HEIGHT }));
+    rightEdge.push(Object.freeze({ x: STREAM.left + STREAM.width - profile.rightInset, y: WORLD_HEIGHT }));
+  }
+
+  const segments = leftEdge.slice(0, -1).map((leftTop, index) => {
+    const leftBottom = leftEdge[index + 1];
+    const rightTop = rightEdge[index];
+    const rightBottom = rightEdge[index + 1];
+
+    return Object.freeze({
+      index,
+      top: leftTop.y,
+      height: leftBottom.y - leftTop.y,
+      centerY: (leftTop.y + leftBottom.y) / 2,
+      topLeft: leftTop.x,
+      topRight: rightTop.x,
+      bottomLeft: leftBottom.x,
+      bottomRight: rightBottom.x,
+      left: (leftTop.x + leftBottom.x) / 2,
+      right: (rightTop.x + rightBottom.x) / 2,
+    });
+  });
 
   return Object.freeze({
     corridor: STREAM,
-    segmentHeight,
+    sampleStep,
     profile: PROFILE,
     segments: Object.freeze(segments),
     leftEdge: Object.freeze(leftEdge),
     rightEdge: Object.freeze(rightEdge),
+    midWaterEdges: buildInsetEdges(leftEdge, rightEdge, 18),
+    deepWaterEdges: buildInsetEdges(leftEdge, rightEdge, 31),
     crossingProtectionZone: Object.freeze({
       x: STREAM.left - 2 * TILE_SIZE,
       y: 11 * TILE_SIZE,
