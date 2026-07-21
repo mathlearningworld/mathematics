@@ -5,8 +5,12 @@ const prototype = BuildersValleyScene.prototype;
 const originalUpdateTargetResource = prototype._updateTargetResource;
 const originalGetFrontPlacementPoint = prototype._getFrontPlacementPoint;
 
-// Place in the immediately adjacent tile measured from the player's collision edge.
-const PLACEMENT_TILE_DISTANCE = 1;
+// Place immediately beside the player's ground footprint.
+const PLAYER_FOOTPRINT_HALF_WIDTH = 11;
+const PLAYER_FOOTPRINT_HALF_HEIGHT = 12;
+const BLOCK_HALF_WIDTH = 14;
+const BLOCK_HALF_HEIGHT = 11;
+const PLACEMENT_GAP = 1;
 // Pickup begins only when player and block collision bounds are genuinely adjacent.
 const PICKUP_BODY_GAP_MAX = 4;
 const PICKUP_FORWARD_DOT_MIN = 0.25;
@@ -193,26 +197,28 @@ prototype._getFrontPlacementPoint = function getAdjacentFrontPlacementPoint() {
   if (!this.player) return originalGetFrontPlacementPoint?.call(this) ?? null;
 
   const direction = getInteractionDirection(this);
-  const bounds = getBounds(this.player);
-  const blockHalfWidth = 14;
-  const blockHalfHeight = 11;
+  const playerX = this.player.x;
+  const playerY = this.player.y;
 
+  // The Arcade body bounds on a Container are offset from its visual/world anchor.
+  // Use the player's world anchor plus the explicit footprint dimensions so the
+  // preview remains centered and equally adjacent in all four directions.
   if (Math.abs(direction.x) >= Math.abs(direction.y)) {
     return {
       x:
-        direction.x < 0
-          ? bounds.left - blockHalfWidth * PLACEMENT_TILE_DISTANCE
-          : bounds.right + blockHalfWidth * PLACEMENT_TILE_DISTANCE,
-      y: (bounds.top + bounds.bottom) / 2,
+        playerX +
+        (direction.x < 0 ? -1 : 1) *
+          (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_HALF_WIDTH + PLACEMENT_GAP),
+      y: playerY,
     };
   }
 
   return {
-    x: (bounds.left + bounds.right) / 2,
+    x: playerX,
     y:
-      direction.y < 0
-        ? bounds.top - blockHalfHeight * PLACEMENT_TILE_DISTANCE
-        : bounds.bottom + blockHalfHeight * PLACEMENT_TILE_DISTANCE,
+      playerY +
+      (direction.y < 0 ? -1 : 1) *
+        (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_HALF_HEIGHT + PLACEMENT_GAP),
   };
 };
 
