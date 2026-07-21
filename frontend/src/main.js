@@ -14,6 +14,7 @@ import "./sandbox/scenes/BuildersValleyOccupiedPlacementPickupPatch.js";
 import "./sandbox/scenes/BuildersValleyPickupFocusStabilityPatch.js";
 import "./sandbox/scenes/BuildersValleyPrecisePlacementPatch.js";
 import "./sandbox/scenes/BuildersValleyMaterialFallbackPatch.js";
+import "./sandbox/scenes/BuildersValleyChainIntentPatch.js";
 import "./sandbox/scenes/BuildersValleyVisualAlignmentPatch.js";
 import "./sandbox/scenes/BuildersValleyPlacementRuntimePatch.js";
 
