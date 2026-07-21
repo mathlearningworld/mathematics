@@ -8,6 +8,7 @@ import "./sandbox/scenes/BuildersValleyFeedbackPatch.js";
 import "./sandbox/scenes/BuildersValleyDirectionPatch.js";
 import "./sandbox/scenes/BuildersValleyMissionPatch.js";
 import "./sandbox/scenes/BuildersValleyPlacementPriorityPatch.js";
+import "./sandbox/scenes/BuildersValleyInteractionGeometryPatch.js";
 
 try {
   const game = createSandboxGame();
