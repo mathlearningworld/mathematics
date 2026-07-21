@@ -1,14 +1,28 @@
-function segmentPolygon(segment, inset = 0) {
-  return [
-    { x: segment.topLeft + inset, y: segment.top - 1 },
-    { x: segment.topRight - inset, y: segment.top - 1 },
-    { x: segment.bottomRight - inset, y: segment.top + segment.height + 1 },
-    { x: segment.bottomLeft + inset, y: segment.top + segment.height + 1 },
-  ];
+function buildRiverPolygon(leftEdge, rightEdge) {
+  return [...leftEdge, ...rightEdge.slice().reverse()];
+}
+
+function drawEdgeStrip(graphics, outerEdge, innerEdge, color, alpha) {
+  graphics.fillStyle(color, alpha);
+  graphics.fillPoints([...outerEdge, ...innerEdge.slice().reverse()], true);
+}
+
+function edgePointAtY(edge, y) {
+  const upperIndex = edge.findIndex((point) => point.y >= y);
+  if (upperIndex <= 0) return edge[0];
+
+  const upper = edge[upperIndex];
+  const lower = edge[upperIndex - 1];
+  const ratio = (y - lower.y) / Math.max(1, upper.y - lower.y);
+  return {
+    x: lower.x + (upper.x - lower.x) * ratio,
+    y,
+  };
 }
 
 export function createWaterRenderer(scene, geometry, depth = -16) {
   const container = scene.add.container(0, 0).setDepth(depth);
+  const baseWater = scene.add.graphics();
   const deepWater = scene.add.graphics();
   const midWater = scene.add.graphics();
   const shallows = scene.add.graphics();
@@ -16,65 +30,61 @@ export function createWaterRenderer(scene, geometry, depth = -16) {
   const currents = scene.add.graphics();
   const foam = scene.add.graphics();
 
-  geometry.segments.forEach((segment, index) => {
-    deepWater.fillStyle(index % 4 < 2 ? 0x15536f : 0x195c78, 1);
-    deepWater.fillPoints(segmentPolygon(segment), true);
+  baseWater.fillStyle(0x1b6682, 1);
+  baseWater.fillPoints(buildRiverPolygon(geometry.leftEdge, geometry.rightEdge), true);
 
-    const width = Math.min(segment.topRight - segment.topLeft, segment.bottomRight - segment.bottomLeft);
-    const innerInset = Math.max(18, width * 0.2);
-    midWater.fillStyle(index % 3 === 0 ? 0x1f7897 : 0x226f8c, 0.72);
-    midWater.fillPoints(segmentPolygon(segment, innerInset), true);
+  drawEdgeStrip(shallows, geometry.leftEdge, geometry.midWaterEdges.left, 0x72c3c8, 0.46);
+  drawEdgeStrip(shallows, geometry.rightEdge, geometry.midWaterEdges.right, 0x65b6c2, 0.42);
 
-    const leftShallow = [
-      { x: segment.topLeft, y: segment.top },
-      { x: segment.topLeft + 13, y: segment.top },
-      { x: segment.bottomLeft + 16, y: segment.top + segment.height },
-      { x: segment.bottomLeft, y: segment.top + segment.height },
-    ];
-    const rightShallow = [
-      { x: segment.topRight - 12, y: segment.top },
-      { x: segment.topRight, y: segment.top },
-      { x: segment.bottomRight, y: segment.top + segment.height },
-      { x: segment.bottomRight - 15, y: segment.top + segment.height },
-    ];
-    shallows.fillStyle(index % 2 === 0 ? 0x65bac4 : 0x78c5c6, 0.42);
-    shallows.fillPoints(leftShallow, true);
-    shallows.fillPoints(rightShallow, true);
+  midWater.fillStyle(0x217b98, 0.7);
+  midWater.fillPoints(buildRiverPolygon(geometry.midWaterEdges.left, geometry.midWaterEdges.right), true);
 
-    if (index % 3 !== 1) {
-      const y = segment.centerY + (index % 2 === 0 ? -7 : 8);
-      const center = (segment.left + segment.right) / 2;
-      const length = Math.min(58, Math.max(26, width * 0.34));
-      const drift = index % 2 === 0 ? 4 : -3;
-      currents.lineStyle(2, index % 5 === 0 ? 0xd8f6f5 : 0x87cfda, index % 5 === 0 ? 0.58 : 0.34);
-      currents.lineBetween(center - length / 2, y, center + length / 2, y + drift);
-      if (index % 5 === 0) {
-        currents.lineBetween(center - length * 0.22, y + 9, center + length * 0.18, y + 11);
-      }
-    }
+  deepWater.fillStyle(0x124d6a, 0.86);
+  deepWater.fillPoints(buildRiverPolygon(geometry.deepWaterEdges.left, geometry.deepWaterEdges.right), true);
 
-    if (index % 4 === 2) {
-      const center = (segment.left + segment.right) / 2;
-      reflections.lineStyle(3, 0xa9e2e8, 0.2);
-      reflections.lineBetween(center - 22, segment.centerY - 15, center + 10, segment.centerY - 15);
+  const currentRows = [126, 208, 304, 386, 548, 676, 804, 932];
+  currentRows.forEach((y, index) => {
+    const left = edgePointAtY(geometry.deepWaterEdges.left, y);
+    const right = edgePointAtY(geometry.deepWaterEdges.right, y);
+    const width = right.x - left.x;
+    const center = (left.x + right.x) / 2;
+    const length = Math.max(24, Math.min(66, width * (index % 3 === 0 ? 0.72 : 0.48)));
+    const drift = index % 2 === 0 ? 4 : -3;
+
+    currents.lineStyle(2, index % 3 === 0 ? 0xd8f6f5 : 0x8bd4df, index % 3 === 0 ? 0.58 : 0.36);
+    currents.lineBetween(center - length / 2, y, center + length / 2, y + drift);
+    if (index % 3 === 0) {
+      currents.lineBetween(center - length * 0.2, y + 9, center + length * 0.18, y + 11);
     }
   });
 
-  const first = geometry.segments[0];
-  const waterfallCenter = (first.left + first.right) / 2;
-  foam.fillStyle(0xe6fbfa, 0.72);
-  foam.fillEllipse(waterfallCenter, 78, Math.max(58, first.right - first.left - 10), 22);
-  foam.fillStyle(0xa8e1e6, 0.52);
-  foam.fillEllipse(waterfallCenter, 103, Math.max(48, first.right - first.left - 24), 30);
-  foam.fillStyle(0xffffff, 0.38);
-  foam.fillCircle(waterfallCenter - 32, 88, 8);
-  foam.fillCircle(waterfallCenter + 25, 92, 10);
+  [170, 470, 740].forEach((y, index) => {
+    const left = edgePointAtY(geometry.midWaterEdges.left, y);
+    const right = edgePointAtY(geometry.midWaterEdges.right, y);
+    const center = (left.x + right.x) / 2;
+    reflections.lineStyle(3, 0xb8e8eb, index === 1 ? 0.24 : 0.18);
+    reflections.lineBetween(center - 27, y, center + 8, y + 1);
+  });
 
-  container.add([deepWater, midWater, shallows, reflections, currents, foam]);
+  const waterfallLeft = edgePointAtY(geometry.leftEdge, 76);
+  const waterfallRight = edgePointAtY(geometry.rightEdge, 76);
+  const waterfallCenter = (waterfallLeft.x + waterfallRight.x) / 2;
+  const runoutWidth = Math.max(62, waterfallRight.x - waterfallLeft.x - 8);
+
+  foam.fillStyle(0xe9fbfa, 0.76);
+  foam.fillEllipse(waterfallCenter, 78, runoutWidth, 24);
+  foam.fillStyle(0xa8e3e8, 0.54);
+  foam.fillEllipse(waterfallCenter, 105, runoutWidth * 0.78, 30);
+  foam.fillStyle(0xffffff, 0.42);
+  foam.fillCircle(waterfallCenter - runoutWidth * 0.24, 89, 8);
+  foam.fillCircle(waterfallCenter + runoutWidth * 0.19, 93, 10);
+  foam.fillCircle(waterfallCenter + 2, 111, 6);
+
+  container.add([baseWater, shallows, midWater, deepWater, reflections, currents, foam]);
 
   scene.tweens.add({
     targets: currents,
-    y: 8,
+    y: 7,
     alpha: { from: 0.68, to: 1 },
     duration: 2100,
     yoyo: true,
