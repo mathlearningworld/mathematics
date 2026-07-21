@@ -1,9 +1,11 @@
+import { TILE_SIZE } from "../config/worldContract.js";
 import { BuildersValleyScene } from "./BuildersValleyScene.js";
 
 const prototype = BuildersValleyScene.prototype;
 const originalUpdateTargetResource = prototype._updateTargetResource;
 
-const PLACED_BLOCK_PICKUP_DISTANCE = 46;
+const PLACED_BLOCK_PICKUP_DISTANCE = 74;
+const FRONT_TILE_MATCH_DISTANCE = TILE_SIZE * 0.7;
 
 function getActiveBuildMaterial(scene) {
   const intent = scene.__gameplayIntent;
@@ -38,25 +40,40 @@ function isPlacedBlock(scene, target) {
   return assetId.startsWith("BV_BLOCK_");
 }
 
-function distanceFromPlayer(scene, target) {
-  if (!scene.player || !target) return Number.POSITIVE_INFINITY;
-  return Math.hypot(target.x - scene.player.x, target.y - scene.player.y);
+function distanceBetween(left, right) {
+  if (!left || !right) return Number.POSITIVE_INFINITY;
+  return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
-function findClosePlacedBlock(scene) {
-  let nearest = null;
-  let nearestDistance = PLACED_BLOCK_PICKUP_DISTANCE;
+function getFrontInteractionTile(scene) {
+  const rawPoint = scene._getFrontPlacementPoint?.();
+  if (!rawPoint) return null;
+
+  return {
+    x: Math.floor(rawPoint.x / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2,
+    y: Math.floor(rawPoint.y / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2,
+  };
+}
+
+function findPlacedBlockOnFrontTile(scene) {
+  const frontTile = getFrontInteractionTile(scene);
+  if (!frontTile || !scene.player) return null;
+
+  let best = null;
+  let bestTileDistance = FRONT_TILE_MATCH_DISTANCE;
 
   for (const block of scene.placedBlocks ?? []) {
     if (!block?.active) continue;
-    const distance = distanceFromPlayer(scene, block);
-    if (distance <= nearestDistance) {
-      nearest = block;
-      nearestDistance = distance;
+    if (distanceBetween(scene.player, block) > PLACED_BLOCK_PICKUP_DISTANCE) continue;
+
+    const tileDistance = distanceBetween(frontTile, block);
+    if (tileDistance < bestTileDistance) {
+      best = block;
+      bestTileDistance = tileDistance;
     }
   }
 
-  return nearest;
+  return best;
 }
 
 function clearPlacedBlockTarget(scene) {
@@ -73,7 +90,8 @@ function clearPlacedBlockTarget(scene) {
 
 function autoSelectToolForBlock(scene, block) {
   const material = block.getData?.("resourceType") ?? block.getData?.("material") ?? null;
-  const requiredTool = block.getData?.("requiredTool") ??
+  const requiredTool =
+    block.getData?.("requiredTool") ??
     (material === "wood" ? "axe" : material === "stone" ? "pickaxe" : null);
   if (!requiredTool) return;
 
@@ -88,7 +106,7 @@ function autoSelectToolForBlock(scene, block) {
   }
 }
 
-function confirmNearestPlacedBlock(scene, block) {
+function confirmFrontPlacedBlock(scene, block) {
   const previousTarget = scene.targetResource;
   scene.targetResource = block;
 
@@ -98,17 +116,14 @@ function confirmNearestPlacedBlock(scene, block) {
     scene.__targetDecision.candidateSince = 0;
   }
 
-  scene.targetIndicator
-    ?.setVisible(true)
-    .setPosition(block.x, block.y - 12);
-
+  scene.targetIndicator?.setVisible(true).setPosition(block.x, block.y - 12);
   autoSelectToolForBlock(scene, block);
 
   if (previousTarget !== block) {
     scene._recordEvent?.("target_confirmed", {
       previous: previousTarget?.getData?.("assetId") ?? null,
       current: block.getData?.("assetId") ?? null,
-      reason: "NEAREST_PLACED_BLOCK_IN_PICKUP_RANGE",
+      reason: "PLACED_BLOCK_ON_FRONT_INTERACTION_TILE",
     });
   }
 }
@@ -134,12 +149,12 @@ prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
     return;
   }
 
-  const closePlacedBlock = findClosePlacedBlock(this);
-  if (closePlacedBlock) {
-    // Pickup range is deterministic: the nearest placed block always wins.
-    // Do not pass this branch through the general target scoring engine, because
-    // facing and intent weights can otherwise select a farther block.
-    confirmNearestPlacedBlock(this, closePlacedBlock);
+  const frontPlacedBlock = findPlacedBlockOnFrontTile(this);
+  if (frontPlacedBlock) {
+    // Placement and pickup now share the same interaction tile. A built block is
+    // collectible only when it occupies the exact tile currently in front of the
+    // player; nearby side or rear blocks cannot steal focus.
+    confirmFrontPlacedBlock(this, frontPlacedBlock);
     return;
   }
 
