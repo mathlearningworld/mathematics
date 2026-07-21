@@ -6,32 +6,55 @@ function addRock(scene, container, x, y, radius, variant = 0) {
   container.add([shadow, base, plane, moss]);
 }
 
+function addShelf(graphics, points, faceColor, topColor) {
+  graphics.fillStyle(faceColor, 0.96);
+  graphics.fillPoints(points, true);
+  graphics.fillStyle(topColor, 0.72);
+  graphics.lineStyle(7, topColor, 0.72);
+  graphics.strokePoints(points.slice(0, 3), false);
+}
+
 export function composeGorge(scene, geometry, depth = -8) {
   const container = scene.add.container(0, 0).setDepth(depth);
   const first = geometry.edgeSamples[0];
   const center = (first.left + first.right) / 2;
   const gorge = scene.add.graphics();
 
-  gorge.fillStyle(0x263837, 0.72);
+  gorge.fillStyle(0x263837, 0.7);
   gorge.fillPoints([
-    { x: first.left - 74, y: 0 },
-    { x: first.right + 74, y: 0 },
-    { x: first.right + 42, y: 126 },
-    { x: first.right + 20, y: 178 },
-    { x: first.left - 24, y: 178 },
-    { x: first.left - 46, y: 126 },
+    { x: first.left - 82, y: 0 },
+    { x: first.right + 82, y: 0 },
+    { x: first.right + 58, y: 86 },
+    { x: first.right + 26, y: 162 },
+    { x: first.left - 28, y: 162 },
+    { x: first.left - 60, y: 88 },
   ], true);
 
-  gorge.fillStyle(0x718060, 0.54);
-  gorge.fillEllipse(center, 150, Math.max(150, first.right - first.left + 96), 54);
+  addShelf(gorge, [
+    { x: first.left - 48, y: 118 },
+    { x: center - 18, y: 132 },
+    { x: center - 48, y: 164 },
+    { x: first.left - 70, y: 150 },
+  ], 0x455653, 0x718060);
+  addShelf(gorge, [
+    { x: center + 18, y: 132 },
+    { x: first.right + 48, y: 116 },
+    { x: first.right + 68, y: 150 },
+    { x: center + 46, y: 164 },
+  ], 0x3d4e4d, 0x687a61);
+
+  gorge.fillStyle(0x1b2928, 0.46);
+  gorge.fillEllipse(center, 153, Math.max(106, first.right - first.left + 34), 30);
 
   [
-    [first.left - 48, 76, 30, 0],
-    [first.left - 22, 126, 24, 1],
-    [first.left - 54, 160, 19, 0],
-    [first.right + 48, 70, 28, 1],
-    [first.right + 28, 120, 23, 0],
-    [first.right + 54, 158, 18, 1],
+    [first.left - 52, 72, 30, 0],
+    [first.left - 24, 116, 23, 1],
+    [first.left - 58, 158, 18, 0],
+    [first.right + 52, 68, 28, 1],
+    [first.right + 28, 112, 22, 0],
+    [first.right + 58, 156, 17, 1],
+    [center - 58, 142, 14, 1],
+    [center + 58, 140, 13, 0],
   ].forEach(([x, y, radius, variant]) => addRock(scene, container, x, y, radius, variant));
 
   container.addAt(gorge, 0);
