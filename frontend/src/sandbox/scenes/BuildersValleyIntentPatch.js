@@ -334,3 +334,146 @@ prototype._updateTargetResource = function updateTargetWithScoringAndQueue() {
     this.__intentContextUpdating = false;
   }
 };
+
+const predictionOriginalCreate = prototype.create;
+const predictionOriginalUpdate = prototype.update;
+const predictionOriginalTryPlaceSelectedBlock = prototype._tryPlaceSelectedBlock;
+
+function snapshotPlacementPrediction(scene) {
+  const prediction = scene.__placementPrediction;
+  if (!prediction) return null;
+  return {
+    ...prediction,
+    tile: prediction.tile ? { ...prediction.tile } : null,
+    worldPoint: prediction.worldPoint ? { ...prediction.worldPoint } : null,
+  };
+}
+
+function getPlacementMaterial(scene) {
+  const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
+  if (selectedItem?.kind === "BLOCK" && scene.inventory?.[selectedItem.resourceType] > 0) {
+    return selectedItem.resourceType;
+  }
+
+  const intendedMaterial = getIntendedMaterial(scene);
+  return intendedMaterial && scene.inventory?.[intendedMaterial] > 0 ? intendedMaterial : null;
+}
+
+function predictNextAction(scene) {
+  const confirmedTarget = scene.targetResource?.active ? scene.targetResource : null;
+  if (confirmedTarget) {
+    return {
+      kind: "COLLECT_TARGET",
+      confidence: "HIGH",
+      resourceType: confirmedTarget.getData?.("resourceType") ?? null,
+      target: describeTarget(confirmedTarget),
+      worldPoint: { x: Math.round(confirmedTarget.x), y: Math.round(confirmedTarget.y) },
+      tile: null,
+      valid: true,
+      reason: "CONFIRMED_CONTEXT_TARGET",
+      updatedAt: Date.now(),
+    };
+  }
+
+  const resourceType = getPlacementMaterial(scene);
+  if (!resourceType || !scene.player) {
+    return {
+      kind: "NONE",
+      confidence: "NONE",
+      resourceType: null,
+      target: null,
+      worldPoint: null,
+      tile: null,
+      valid: false,
+      reason: resourceType ? "PLAYER_NOT_READY" : "NO_PLACEABLE_MATERIAL",
+      updatedAt: Date.now(),
+    };
+  }
+
+  const rawPoint = scene._getFrontPlacementPoint?.();
+  if (!rawPoint) {
+    return {
+      kind: "NONE",
+      confidence: "NONE",
+      resourceType,
+      target: null,
+      worldPoint: null,
+      tile: null,
+      valid: false,
+      reason: "NO_FRONT_PLACEMENT_POINT",
+      updatedAt: Date.now(),
+    };
+  }
+
+  const direction = scene.lastInteractionDirection ?? { x: 1, y: 0 };
+  const inferredTileSize =
+    Math.max(
+      Math.abs(rawPoint.x - scene.player.x),
+      Math.abs(rawPoint.y - scene.player.y),
+    ) || 32;
+  const tileX = Math.floor(rawPoint.x / inferredTileSize) * inferredTileSize + inferredTileSize / 2;
+  const tileY = Math.floor(rawPoint.y / inferredTileSize) * inferredTileSize + inferredTileSize / 2;
+  const occupied = [...(scene.resourceNodes ?? []), ...(scene.placedBlocks ?? [])].some(
+    (object) =>
+      object?.active &&
+      Math.hypot(tileX - object.x, tileY - object.y) < inferredTileSize * 0.7,
+  );
+  const distance = Math.hypot(tileX - scene.player.x, tileY - scene.player.y);
+  const valid = !occupied && distance <= 100;
+
+  return {
+    kind: "PLACE_BLOCK",
+    confidence: scene.__gameplayIntent ? "HIGH" : "MEDIUM",
+    resourceType,
+    target: null,
+    worldPoint: { x: Math.round(tileX), y: Math.round(tileY) },
+    tile: {
+      column: Math.floor(tileX / inferredTileSize),
+      row: Math.floor(tileY / inferredTileSize),
+    },
+    direction: { ...direction },
+    valid,
+    reason: occupied ? "OCCUPIED" : distance > 100 ? "OUT_OF_RANGE" : "FRONT_TILE_AVAILABLE",
+    updatedAt: Date.now(),
+  };
+}
+
+function predictionKey(prediction) {
+  return JSON.stringify({
+    kind: prediction?.kind ?? "NONE",
+    resourceType: prediction?.resourceType ?? null,
+    target: prediction?.target?.assetId ?? null,
+    x: prediction?.worldPoint?.x ?? null,
+    y: prediction?.worldPoint?.y ?? null,
+    valid: prediction?.valid ?? false,
+    reason: prediction?.reason ?? null,
+  });
+}
+
+prototype.create = function createWithPredictionRuntime() {
+  predictionOriginalCreate.call(this);
+  this.__placementPrediction = predictNextAction(this);
+  this.__placementPredictionKey = predictionKey(this.__placementPrediction);
+
+  if (window.__BUILDERS_VALLEY__) {
+    window.__BUILDERS_VALLEY__.getPlacementPrediction = () =>
+      snapshotPlacementPrediction(this);
+  }
+};
+
+prototype.update = function updateWithPredictionRuntime(time, delta) {
+  predictionOriginalUpdate.call(this, time, delta);
+
+  const nextPrediction = predictNextAction(this);
+  const nextKey = predictionKey(nextPrediction);
+  if (nextKey !== this.__placementPredictionKey) {
+    this.__placementPrediction = nextPrediction;
+    this.__placementPredictionKey = nextKey;
+  }
+};
+
+prototype._tryPlaceSelectedBlock = function placeBlockWithPrediction(worldX, worldY) {
+  predictionOriginalTryPlaceSelectedBlock.call(this, worldX, worldY);
+  this.__placementPrediction = predictNextAction(this);
+  this.__placementPredictionKey = predictionKey(this.__placementPrediction);
+};
