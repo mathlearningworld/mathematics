@@ -1,7 +1,7 @@
 export const BUILDERS_VALLEY_ASSET_PIPELINE_STANDARD =
   "BUILDERS_VALLEY_PRODUCTION_ASSET_PIPELINE_V1";
 
-export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V3";
+export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V4";
 
 export const BUILDERS_VALLEY_ASSET_FAMILIES = Object.freeze([
   "GROUND",
@@ -61,9 +61,11 @@ export const BUILDERS_VALLEY_ASSETS = Object.freeze([
     id: "BV_CLIFF_ATLAS_01",
     family: "CLIFF",
     sourceType: "ATLAS",
-    textureUrl: "/assets/builders-valley/cliff/cliff-atlas.png",
+    textureUrl: "/assets/builders-valley/cliff/cliff-atlas.svg",
     dataUrl: "/assets/builders-valley/cliff/cliff-atlas.json",
     layer: "cliff",
+    enabled: true,
+    required: true,
     replacementTarget: "shoreline faces, shelves, caps and gorge rocks",
   }),
   asset({
