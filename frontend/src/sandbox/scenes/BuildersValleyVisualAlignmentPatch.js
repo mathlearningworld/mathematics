@@ -57,7 +57,11 @@ function isSocketOccupied(scene, candidate) {
   );
 }
 
-function snapToNearestUniformSocket(scene, rawPoint) {
+function isOffsetOnFacingAxis(offset, direction) {
+  return direction.x !== 0 ? offset.y === 0 : offset.x === 0;
+}
+
+function snapToNearestUniformSocket(scene, rawPoint, direction) {
   let bestPoint = null;
   let bestDelta = Number.POSITIVE_INFINITY;
 
@@ -65,6 +69,12 @@ function snapToNearestUniformSocket(scene, rawPoint) {
     if (!block?.active) continue;
 
     for (const offset of BUILD_SOCKET_OFFSETS) {
+      // Never escape around an occupied block by jumping to a perpendicular
+      // socket. Horizontal placement stays on the horizontal axis; vertical
+      // placement stays on the vertical axis. If the intended point is blocked,
+      // the preview remains there and becomes invalid instead of moving aside.
+      if (!isOffsetOnFacingAxis(offset, direction)) continue;
+
       const candidate = {
         x: block.x + offset.x,
         y: block.y + offset.y,
@@ -112,7 +122,7 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
               (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
         };
 
-  return snapToNearestUniformSocket(this, rawPoint);
+  return snapToNearestUniformSocket(this, rawPoint, direction);
 };
 
 function calibrateTargetIndicator(scene) {
