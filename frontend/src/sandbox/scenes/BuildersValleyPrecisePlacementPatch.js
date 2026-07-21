@@ -6,14 +6,14 @@ import { BuildersValleyScene } from "./BuildersValleyScene.js";
 
 const prototype = BuildersValleyScene.prototype;
 const originalTryPlaceSelectedBlock = prototype._tryPlaceSelectedBlock;
+const originalTryUseSelectedItem = prototype._tryUseSelectedItem;
 const originalUpdate = prototype.update;
 
 const FRONT_POINT_TOLERANCE = 3;
 const OCCUPANCY_DISTANCE = TILE_SIZE * 0.7;
 const MAX_PRECISE_PLACEMENT_DISTANCE = TILE_SIZE * 1.5;
 
-function resolveCanonicalPlacementPoint(scene) {
-  const point = scene._getFrontPlacementPoint?.();
+function roundPoint(point) {
   if (!point) return null;
   return {
     x: Math.round(point.x),
@@ -21,14 +21,26 @@ function resolveCanonicalPlacementPoint(scene) {
   };
 }
 
+function resolveCanonicalPlacementPoint(scene) {
+  return roundPoint(scene._getFrontPlacementPoint?.());
+}
+
+function getDisplayedPlacementPoint(scene) {
+  const prediction = scene.__placementPrediction;
+  if (prediction?.kind !== "PLACE_BLOCK" || !prediction.worldPoint) return null;
+  return roundPoint(prediction.worldPoint);
+}
+
 prototype._resolveCanonicalPlacementPoint = function resolvePlacementPoint() {
   return resolveCanonicalPlacementPoint(this);
 };
 
 function isFrontPlacementRequest(scene, worldX, worldY) {
-  const point = scene._resolveCanonicalPlacementPoint?.();
-  if (!point) return false;
-  return Math.hypot(worldX - point.x, worldY - point.y) <= FRONT_POINT_TOLERANCE;
+  const canonicalPoint = scene._resolveCanonicalPlacementPoint?.();
+  const displayedPoint = getDisplayedPlacementPoint(scene);
+  return [canonicalPoint, displayedPoint].some(
+    (point) => point && Math.hypot(worldX - point.x, worldY - point.y) <= FRONT_POINT_TOLERANCE,
+  );
 }
 
 function isInsideStream(x, y) {
@@ -51,7 +63,7 @@ function placeAtCanonicalPoint(scene, point) {
   const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
   if (selectedItem?.kind !== "BLOCK" || !point) return;
 
-  const { x, y } = point;
+  const { x, y } = roundPoint(point);
   const distance = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, x, y);
 
   if (distance > MAX_PRECISE_PLACEMENT_DISTANCE) {
@@ -100,16 +112,29 @@ function placeAtCanonicalPoint(scene, point) {
   scene._showStatus?.("วางบล็อกแล้ว");
 }
 
+prototype._tryUseSelectedItem = function tryUseExactDisplayedPlacement() {
+  const selectedItem = this.hotbarSlots?.[this.selectedSlot]?.item;
+  if (selectedItem?.kind !== "BLOCK") {
+    originalTryUseSelectedItem.call(this);
+    return;
+  }
+
+  // The corner visible to the player is the placement authority for this action.
+  // Reusing this frozen point prevents a moving player or a same-frame intent update
+  // from recalculating a different spawn position after the preview was rendered.
+  const displayedPoint = getDisplayedPlacementPoint(this);
+  const point = displayedPoint ?? this._resolveCanonicalPlacementPoint?.();
+  placeAtCanonicalPoint(this, point);
+};
+
 prototype._tryPlaceSelectedBlock = function tryPlaceWithCanonicalGeometry(worldX, worldY) {
   if (!isFrontPlacementRequest(this, worldX, worldY)) {
     originalTryPlaceSelectedBlock.call(this, worldX, worldY);
     return;
   }
 
-  // Resolve once at action time and use this exact point for spawning. The
-  // prediction runtime below reads the same resolver, so preview and final block
-  // cannot diverge through separate rounding, snapping, or offset formulas.
-  placeAtCanonicalPoint(this, this._resolveCanonicalPlacementPoint?.());
+  const displayedPoint = getDisplayedPlacementPoint(this);
+  placeAtCanonicalPoint(this, displayedPoint ?? this._resolveCanonicalPlacementPoint?.());
 };
 
 prototype.update = function updateWithCanonicalPlacementFeedback(time, delta) {
