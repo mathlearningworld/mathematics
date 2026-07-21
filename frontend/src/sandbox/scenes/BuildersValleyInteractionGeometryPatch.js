@@ -5,8 +5,8 @@ const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 const originalUpdate = prototype.update;
 
-const PLACEMENT_TILE_DISTANCE = 2;
-const MAX_PLACEMENT_DISTANCE = 100;
+const PLACEMENT_TILE_DISTANCE = 1;
+const MAX_PLACEMENT_DISTANCE = TILE_SIZE * 1.5;
 const OCCUPANCY_DISTANCE = TILE_SIZE * 0.7;
 
 function normalizeDirection(scene) {
@@ -16,6 +16,14 @@ function normalizeDirection(scene) {
     x: direction.x / length,
     y: direction.y / length,
   };
+}
+
+function cardinalDirection(scene) {
+  const direction = normalizeDirection(scene);
+  if (Math.abs(direction.x) >= Math.abs(direction.y)) {
+    return { x: direction.x >= 0 ? 1 : -1, y: 0 };
+  }
+  return { x: 0, y: direction.y >= 0 ? 1 : -1 };
 }
 
 function snapToTile(value) {
@@ -94,11 +102,14 @@ function buildUnifiedPrediction(scene) {
     };
   }
 
-  const direction = normalizeDirection(scene);
-  const rawX = scene.player.x + direction.x * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
-  const rawY = scene.player.y + direction.y * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
-  const tileX = snapToTile(rawX);
-  const tileY = snapToTile(rawY);
+  // Anchor placement to the player's current tile, then move exactly one tile
+  // in the facing direction. This prevents downward placement from jumping
+  // between one and two tiles as the player moves inside the same tile.
+  const direction = cardinalDirection(scene);
+  const playerTileX = snapToTile(scene.player.x);
+  const playerTileY = snapToTile(scene.player.y);
+  const tileX = playerTileX + direction.x * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
+  const tileY = playerTileY + direction.y * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
 
   const occupied = [...(scene.resourceNodes ?? []), ...(scene.placedBlocks ?? [])].some(
     (object) =>
@@ -109,7 +120,7 @@ function buildUnifiedPrediction(scene) {
     tileX <= STREAM.left + STREAM.width &&
     tileY >= STREAM.top &&
     tileY <= STREAM.top + STREAM.height;
-  const distance = Math.hypot(tileX - scene.player.x, tileY - scene.player.y);
+  const distance = Math.hypot(tileX - playerTileX, tileY - playerTileY);
   const outOfRange = distance > MAX_PLACEMENT_DISTANCE;
   const valid = !occupied && !insideStream && !outOfRange;
 
