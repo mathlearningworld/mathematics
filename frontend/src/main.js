@@ -19,6 +19,7 @@ import "./sandbox/scenes/BuildersValleyVisualAlignmentPatch.js";
 import "./sandbox/scenes/BuildersValleyPlacementRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyProductionVisualPatch.js";
 import "./sandbox/scenes/BuildersValleyHeroSlicePatch.js";
+import "./sandbox/scenes/BuildersValleyCompositionPatch.js";
 
 try {
   const game = createSandboxGame();
