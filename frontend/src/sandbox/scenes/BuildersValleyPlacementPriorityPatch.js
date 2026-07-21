@@ -3,6 +3,8 @@ import { BuildersValleyScene } from "./BuildersValleyScene.js";
 const prototype = BuildersValleyScene.prototype;
 const originalUpdateTargetResource = prototype._updateTargetResource;
 
+const PLACED_BLOCK_PICKUP_DISTANCE = 46;
+
 function getSelectedBuildMaterial(scene) {
   const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
   if (selectedItem?.kind !== "BLOCK") return null;
@@ -24,6 +26,20 @@ function isPlacedBlock(scene, target) {
   if (scene.placedBlocks?.includes(target)) return true;
   const assetId = target.getData?.("assetId") ?? "";
   return assetId.startsWith("BV_BLOCK_");
+}
+
+function distanceFromPlayer(scene, target) {
+  if (!scene.player || !target) return Number.POSITIVE_INFINITY;
+  return Math.hypot(target.x - scene.player.x, target.y - scene.player.y);
+}
+
+function findClosePlacedBlock(scene) {
+  return (scene.placedBlocks ?? [])
+    .filter(
+      (block) =>
+        block?.active && distanceFromPlayer(scene, block) <= PLACED_BLOCK_PICKUP_DISTANCE,
+    )
+    .sort((left, right) => distanceFromPlayer(scene, left) - distanceFromPlayer(scene, right))[0] ?? null;
 }
 
 function clearPlacedBlockTarget(scene) {
@@ -52,6 +68,26 @@ function restoreSelectedBuildMaterial(scene, resourceType) {
   }
 }
 
+function updateForClosePickup(scene, closeBlock, originalNodes) {
+  const previousLastPlacedTarget = scene.__lastPlacedIntentTarget;
+
+  // At deliberate pickup range, the placed block becomes a real context target.
+  // Temporarily remove the just-placed penalty so the existing scoring and
+  // interaction queue can confirm it and select its required tool normally.
+  scene.__lastPlacedIntentTarget = null;
+  scene.resourceNodes = [
+    closeBlock,
+    ...(originalNodes ?? []).filter((node) => !isPlacedBlock(scene, node)),
+  ];
+
+  try {
+    originalUpdateTargetResource.call(scene);
+  } finally {
+    scene.resourceNodes = originalNodes;
+    scene.__lastPlacedIntentTarget = previousLastPlacedTarget;
+  }
+}
+
 prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
   const buildMaterial = getSelectedBuildMaterial(this);
   if (!buildMaterial) {
@@ -59,9 +95,18 @@ prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
     return;
   }
 
+  const originalNodes = this.resourceNodes;
+  const closePlacedBlock = findClosePlacedBlock(this);
+
+  if (closePlacedBlock) {
+    updateForClosePickup(this, closePlacedBlock, originalNodes);
+    return;
+  }
+
   clearPlacedBlockTarget(this);
 
-  const originalNodes = this.resourceNodes;
+  // While the player is building, placed blocks outside deliberate pickup range
+  // must not steal focus from the next placement tile.
   this.resourceNodes = Array.isArray(originalNodes)
     ? originalNodes.filter((node) => !isPlacedBlock(this, node))
     : originalNodes;
