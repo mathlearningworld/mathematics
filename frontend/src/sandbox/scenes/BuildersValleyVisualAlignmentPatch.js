@@ -1,3 +1,4 @@
+import { TILE_SIZE } from "../config/worldContract.js";
 import { BuildersValleyScene } from "./BuildersValleyScene.js";
 
 const prototype = BuildersValleyScene.prototype;
@@ -14,6 +15,12 @@ const BLOCK_VISUAL_HALF_WIDTH = 14;
 const BLOCK_VISUAL_HALF_HEIGHT = 13;
 const PLACEMENT_GAP = 1;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
+
+// Once a build line exists, every following block uses one canonical centre-to-
+// centre pitch. This prevents small player-position differences from producing
+// visibly uneven gaps between otherwise adjacent blocks.
+const BUILD_BLOCK_PITCH = TILE_SIZE;
+const BUILD_LINE_SNAP_MAX = TILE_SIZE * 0.65;
 
 const PLACED_BLOCK_FOCUS_SCALE = 0.68;
 const NATURAL_RESOURCE_FOCUS_SCALE = 1;
@@ -33,6 +40,28 @@ function getCardinalDirection(scene) {
   return { x: 0, y: direction.y >= 0 ? 1 : -1 };
 }
 
+function snapToUniformBuildLine(scene, rawPoint, direction) {
+  let bestPoint = null;
+  let bestDelta = Number.POSITIVE_INFINITY;
+
+  for (const block of scene.placedBlocks ?? []) {
+    if (!block?.active) continue;
+
+    const candidate = {
+      x: block.x + direction.x * BUILD_BLOCK_PITCH,
+      y: block.y + direction.y * BUILD_BLOCK_PITCH,
+    };
+    const delta = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
+
+    if (delta <= BUILD_LINE_SNAP_MAX && delta < bestDelta) {
+      bestPoint = candidate;
+      bestDelta = delta;
+    }
+  }
+
+  return bestPoint ?? rawPoint;
+}
+
 prototype._getPlayerFootPoint = function getPlayerVisualFootPoint() {
   if (!this.player) return null;
   return {
@@ -46,23 +75,24 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
   if (!foot) return null;
 
   const direction = getCardinalDirection(this);
-  if (direction.x !== 0) {
-    return {
-      x:
-        foot.x +
-        direction.x *
-          (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_VISUAL_HALF_WIDTH + PLACEMENT_GAP),
-      y: foot.y + HORIZONTAL_BLOCK_CENTER_Y_OFFSET,
-    };
-  }
+  const rawPoint =
+    direction.x !== 0
+      ? {
+          x:
+            foot.x +
+            direction.x *
+              (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_VISUAL_HALF_WIDTH + PLACEMENT_GAP),
+          y: foot.y + HORIZONTAL_BLOCK_CENTER_Y_OFFSET,
+        }
+      : {
+          x: foot.x,
+          y:
+            foot.y +
+            direction.y *
+              (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
+        };
 
-  return {
-    x: foot.x,
-    y:
-      foot.y +
-      direction.y *
-        (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
-  };
+  return snapToUniformBuildLine(this, rawPoint, direction);
 };
 
 function calibrateTargetIndicator(scene) {
