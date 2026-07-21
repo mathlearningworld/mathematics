@@ -1,6 +1,7 @@
 import { BuildersValleyScene } from "./BuildersValleyScene.js";
 
 const prototype = BuildersValleyScene.prototype;
+const originalCreate = prototype.create;
 const originalSelectHotbarSlot = prototype._selectHotbarSlot;
 const originalTryCollectResource = prototype._tryCollectResource;
 const originalTryPlaceSelectedBlock = prototype._tryPlaceSelectedBlock;
@@ -21,6 +22,39 @@ function findMaterialSlot(scene, preferredResourceType = null) {
   );
 }
 
+function snapshotIntent(scene) {
+  const intent = scene.__gameplayIntent;
+  return intent ? { ...intent } : null;
+}
+
+function setBuildIntent(scene, resourceType, source) {
+  if (!resourceType) return;
+
+  const previous = scene.__gameplayIntent;
+  scene.__gameplayIntent = {
+    kind: "BUILD_WITH_MATERIAL",
+    resourceType,
+    source,
+    state: "ACTIVE",
+    placedCount:
+      previous?.kind === "BUILD_WITH_MATERIAL" && previous.resourceType === resourceType
+        ? previous.placedCount
+        : 0,
+    updatedAt: Date.now(),
+  };
+  scene.__placementIntentMaterial = resourceType;
+  scene.__lastPlacedIntentTarget = null;
+}
+
+function cancelGameplayIntent(scene, reason) {
+  if (!scene.__gameplayIntent && !scene.__placementIntentMaterial) return;
+
+  scene.__gameplayIntent = null;
+  scene.__placementIntentMaterial = null;
+  scene.__lastPlacedIntentTarget = null;
+  scene._recordEvent?.("gameplay_intent_cancelled", { reason });
+}
+
 function autoSelect(scene, index) {
   if (!Number.isInteger(index) || index < 0) return;
   scene.__intentAutoSelecting = true;
@@ -31,17 +65,43 @@ function autoSelect(scene, index) {
   }
 }
 
+prototype.create = function createWithIntentRuntime() {
+  originalCreate.call(this);
+
+  this.__gameplayIntent = null;
+  this.__placementIntentMaterial = null;
+  this.__lastPlacedIntentTarget = null;
+
+  if (window.__BUILDERS_VALLEY__) {
+    window.__BUILDERS_VALLEY__.getGameplayIntent = () => snapshotIntent(this);
+    window.__BUILDERS_VALLEY__.cancelGameplayIntent = () =>
+      cancelGameplayIntent(this, "DEBUG_CANCEL");
+  }
+};
+
 prototype._selectHotbarSlot = function selectHotbarSlotWithIntent(index) {
   originalSelectHotbarSlot.call(this, index);
 
   if (
-    !this.__intentAutoSelecting &&
-    !this.__intentCollecting &&
-    !this.__intentContextUpdating
+    this.__intentAutoSelecting ||
+    this.__intentCollecting ||
+    this.__intentContextUpdating
   ) {
-    this.__placementIntentMaterial = null;
-    this.__lastPlacedIntentTarget = null;
+    return;
   }
+
+  const selectedItem = this.hotbarSlots?.[index]?.item;
+  if (selectedItem?.kind === "BLOCK" && this.inventory?.[selectedItem.resourceType] > 0) {
+    setBuildIntent(this, selectedItem.resourceType, "MANUAL_BLOCK_SELECTION");
+    this._recordEvent?.("gameplay_intent_started", {
+      kind: "BUILD_WITH_MATERIAL",
+      resourceType: selectedItem.resourceType,
+      source: "MANUAL_BLOCK_SELECTION",
+    });
+    return;
+  }
+
+  cancelGameplayIntent(this, "MANUAL_NON_BLOCK_SELECTION");
 };
 
 prototype._tryCollectResource = function collectResourceWithIntent(resource = this.targetResource) {
@@ -58,8 +118,12 @@ prototype._tryCollectResource = function collectResourceWithIntent(resource = th
   const afterCount = resourceType ? this.inventory?.[resourceType] ?? 0 : 0;
   if (!resourceType || afterCount <= beforeCount) return;
 
-  this.__placementIntentMaterial = resourceType;
-  this.__lastPlacedIntentTarget = null;
+  setBuildIntent(this, resourceType, "RESOURCE_COLLECTED");
+  this._recordEvent?.("gameplay_intent_started", {
+    kind: "BUILD_WITH_MATERIAL",
+    resourceType,
+    source: "RESOURCE_COLLECTED",
+  });
 
   const materialSlot = findMaterialSlot(this, resourceType);
   autoSelect(this, materialSlot);
@@ -77,6 +141,20 @@ prototype._tryPlaceSelectedBlock = function placeBlockWithIntent(worldX, worldY)
 
   this.__lastPlacedIntentTarget = this.placedBlocks[afterPlacedCount - 1] ?? null;
 
+  if (
+    this.__gameplayIntent?.kind === "BUILD_WITH_MATERIAL" &&
+    this.__gameplayIntent.resourceType === resourceType
+  ) {
+    this.__gameplayIntent = {
+      ...this.__gameplayIntent,
+      placedCount: this.__gameplayIntent.placedCount + 1,
+      updatedAt: Date.now(),
+    };
+  } else {
+    setBuildIntent(this, resourceType, "BLOCK_PLACED");
+    this.__gameplayIntent.placedCount = 1;
+  }
+
   const materialSlot = findMaterialSlot(this, resourceType);
   if (materialSlot >= 0) {
     const nextMaterial = this.hotbarSlots[materialSlot].item.resourceType;
@@ -85,7 +163,7 @@ prototype._tryPlaceSelectedBlock = function placeBlockWithIntent(worldX, worldY)
     return;
   }
 
-  this.__placementIntentMaterial = null;
+  this.__placementIntentMaterial = resourceType;
 };
 
 prototype._updateTargetResource = function updateTargetWithIntent() {
@@ -102,7 +180,11 @@ prototype._updateTargetResource = function updateTargetWithIntent() {
   const targetChanged = currentTarget !== previousTarget;
   if (!targetChanged) return;
 
-  const materialSlot = findMaterialSlot(this, this.__placementIntentMaterial);
+  const intendedMaterial =
+    this.__gameplayIntent?.kind === "BUILD_WITH_MATERIAL"
+      ? this.__gameplayIntent.resourceType
+      : this.__placementIntentMaterial;
+  const materialSlot = findMaterialSlot(this, intendedMaterial);
 
   if (!currentTarget) {
     this.__lastPlacedIntentTarget = null;
