@@ -1,0 +1,20 @@
+{
+  "frames": {
+    "cliff_face_01": { "frame": { "x": 0, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "cliff_face_02": { "frame": { "x": 32, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "cliff_cap_01": { "frame": { "x": 64, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "cliff_cap_02": { "frame": { "x": 96, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "gorge_rock_01": { "frame": { "x": 128, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "gorge_rock_02": { "frame": { "x": 160, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "shore_shelf_01": { "frame": { "x": 192, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false },
+    "shore_shelf_02": { "frame": { "x": 224, "y": 0, "w": 32, "h": 32 }, "rotated": false, "trimmed": false }
+  },
+  "meta": {
+    "app": "Math Learning World Builders Valley",
+    "version": "1.0.0",
+    "image": "cliff-atlas.svg",
+    "format": "RGBA8888",
+    "size": { "w": 256, "h": 32 },
+    "scale": "1"
+  }
+}
