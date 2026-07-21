@@ -1,7 +1,7 @@
 export const BUILDERS_VALLEY_ASSET_PIPELINE_STANDARD =
   "BUILDERS_VALLEY_PRODUCTION_ASSET_PIPELINE_V1";
 
-export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V2";
+export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V3";
 
 export const BUILDERS_VALLEY_ASSET_FAMILIES = Object.freeze([
   "GROUND",
@@ -50,9 +50,11 @@ export const BUILDERS_VALLEY_ASSETS = Object.freeze([
     id: "BV_WATER_RIVER_SHEET_01",
     family: "WATER",
     sourceType: "SPRITESHEET",
-    url: "/assets/builders-valley/water/river-sheet.png",
+    url: "/assets/builders-valley/water/river-sheet.svg",
     frameConfig: Object.freeze({ frameWidth: 32, frameHeight: 32 }),
     layer: "water",
+    enabled: true,
+    required: true,
     replacementTarget: "river detail, foam and ripple rendering",
   }),
   asset({
