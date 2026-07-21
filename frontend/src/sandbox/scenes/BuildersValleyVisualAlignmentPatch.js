@@ -10,8 +10,9 @@ const FIXED_PLACEMENT_REACH = TILE_SIZE;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
 const BUILD_BLOCK_PITCH = TILE_SIZE;
-const SOCKET_AXIS_TOLERANCE = 10;
-const SOCKET_LANE_TOLERANCE = 6;
+const SOCKET_ACQUIRE_AXIS_TOLERANCE = 8;
+const SOCKET_ACQUIRE_LANE_TOLERANCE = 5;
+const SOCKET_RELEASE_DISTANCE = 18;
 const OCCUPIED_SOCKET_EPSILON = 4;
 const RAW_POINT_BLOCK_RADIUS = TILE_SIZE * 0.7;
 
@@ -31,6 +32,13 @@ function getCardinalDirection(scene) {
     return { x: direction.x >= 0 ? 1 : -1, y: 0 };
   }
   return { x: 0, y: direction.y >= 0 ? 1 : -1 };
+}
+
+function directionKey(direction) {
+  if (direction.x > 0) return "RIGHT";
+  if (direction.x < 0) return "LEFT";
+  if (direction.y > 0) return "DOWN";
+  return "UP";
 }
 
 function isSocketOccupied(scene, candidate) {
@@ -57,21 +65,24 @@ function buildForwardSocket(block, direction) {
   };
 }
 
-function resolveDeterministicFacingSocket(scene, rawPoint, direction) {
-  // An occupied point remains exactly where the player is aiming. It becomes an
-  // invalid placement instead of searching for another socket above, below, or
-  // behind the existing block.
-  if (isRawPointBlocked(scene, rawPoint)) return rawPoint;
+function clearPlacementSocketLock(scene) {
+  scene.__stablePlacementSocket = null;
+}
 
+function canRetainLockedSocket(scene, rawPoint, direction) {
+  const lock = scene.__stablePlacementSocket;
+  if (!lock || lock.direction !== directionKey(direction)) return false;
+  if (isSocketOccupied(scene, lock.point)) return false;
+  return Math.hypot(lock.point.x - rawPoint.x, lock.point.y - rawPoint.y) <= SOCKET_RELEASE_DISTANCE;
+}
+
+function findFacingSocket(scene, rawPoint, direction) {
   let bestPoint = null;
-  let bestAxisDelta = Number.POSITIVE_INFINITY;
+  let bestDistance = Number.POSITIVE_INFINITY;
 
   for (const block of scene.placedBlocks ?? []) {
     if (!block?.active) continue;
 
-    // A block contributes exactly one socket: the socket in the direction the
-    // player is facing. This removes the previous four-way nearest-socket search,
-    // which could make the preview jump between neighboring rows or columns.
     const candidate = buildForwardSocket(block, direction);
     if (isSocketOccupied(scene, candidate)) continue;
 
@@ -79,19 +90,52 @@ function resolveDeterministicFacingSocket(scene, rawPoint, direction) {
       direction.x !== 0
         ? Math.abs(candidate.y - rawPoint.y)
         : Math.abs(candidate.x - rawPoint.x);
-    if (laneDelta > SOCKET_LANE_TOLERANCE) continue;
+    if (laneDelta > SOCKET_ACQUIRE_LANE_TOLERANCE) continue;
 
     const axisDelta =
       direction.x !== 0
         ? Math.abs(candidate.x - rawPoint.x)
         : Math.abs(candidate.y - rawPoint.y);
-    if (axisDelta > SOCKET_AXIS_TOLERANCE || axisDelta >= bestAxisDelta) continue;
+    if (axisDelta > SOCKET_ACQUIRE_AXIS_TOLERANCE) continue;
+
+    const distance = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
+    if (distance >= bestDistance) continue;
 
     bestPoint = candidate;
-    bestAxisDelta = axisDelta;
+    bestDistance = distance;
   }
 
-  return bestPoint ?? rawPoint;
+  return bestPoint;
+}
+
+function resolveStableFacingSocket(scene, rawPoint, direction) {
+  // When the exact point in front is blocked, keep the preview there and mark it
+  // invalid. Never search around the obstacle or retain an older side socket.
+  if (isRawPointBlocked(scene, rawPoint)) {
+    clearPlacementSocketLock(scene);
+    return rawPoint;
+  }
+
+  // Hysteresis: once a socket has been acquired, retain that exact socket through
+  // normal player movement. A wider release radius prevents frame-by-frame
+  // switching between the free-moving point and the snapped socket.
+  if (canRetainLockedSocket(scene, rawPoint, direction)) {
+    return scene.__stablePlacementSocket.point;
+  }
+
+  clearPlacementSocketLock(scene);
+  const candidate = findFacingSocket(scene, rawPoint, direction);
+  if (!candidate) return rawPoint;
+
+  const point = {
+    x: Math.round(candidate.x),
+    y: Math.round(candidate.y),
+  };
+  scene.__stablePlacementSocket = {
+    direction: directionKey(direction),
+    point,
+  };
+  return point;
 }
 
 prototype._getPlayerFootPoint = function getPlayerVisualFootPoint() {
@@ -118,7 +162,7 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
           y: foot.y + direction.y * FIXED_PLACEMENT_REACH,
         };
 
-  const resolved = resolveDeterministicFacingSocket(this, rawPoint, direction);
+  const resolved = resolveStableFacingSocket(this, rawPoint, direction);
   return {
     x: Math.round(resolved.x),
     y: Math.round(resolved.y),
