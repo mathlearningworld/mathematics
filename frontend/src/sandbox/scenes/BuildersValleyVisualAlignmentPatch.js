@@ -16,11 +16,19 @@ const BLOCK_VISUAL_HALF_HEIGHT = 13;
 const PLACEMENT_GAP = 1;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
-// Once a build line exists, every following block uses one canonical centre-to-
-// centre pitch. This prevents small player-position differences from producing
-// visibly uneven gaps between otherwise adjacent blocks.
+// Every placed block exposes four canonical build sockets. Snapping to the
+// nearest free socket, rather than only the socket matching the current facing
+// direction, keeps centre-to-centre spacing identical even when the player
+// approaches an existing line from its opposite end or from a slight angle.
 const BUILD_BLOCK_PITCH = TILE_SIZE;
-const BUILD_LINE_SNAP_MAX = TILE_SIZE * 0.65;
+const BUILD_SOCKET_SNAP_MAX = TILE_SIZE * 0.9;
+const OCCUPIED_SOCKET_EPSILON = 4;
+const BUILD_SOCKET_OFFSETS = Object.freeze([
+  { x: BUILD_BLOCK_PITCH, y: 0 },
+  { x: -BUILD_BLOCK_PITCH, y: 0 },
+  { x: 0, y: BUILD_BLOCK_PITCH },
+  { x: 0, y: -BUILD_BLOCK_PITCH },
+]);
 
 const PLACED_BLOCK_FOCUS_SCALE = 0.68;
 const NATURAL_RESOURCE_FOCUS_SCALE = 1;
@@ -40,22 +48,34 @@ function getCardinalDirection(scene) {
   return { x: 0, y: direction.y >= 0 ? 1 : -1 };
 }
 
-function snapToUniformBuildLine(scene, rawPoint, direction) {
+function isSocketOccupied(scene, candidate) {
+  return (scene.placedBlocks ?? []).some(
+    (block) =>
+      block?.active &&
+      Math.abs(block.x - candidate.x) <= OCCUPIED_SOCKET_EPSILON &&
+      Math.abs(block.y - candidate.y) <= OCCUPIED_SOCKET_EPSILON,
+  );
+}
+
+function snapToNearestUniformSocket(scene, rawPoint) {
   let bestPoint = null;
   let bestDelta = Number.POSITIVE_INFINITY;
 
   for (const block of scene.placedBlocks ?? []) {
     if (!block?.active) continue;
 
-    const candidate = {
-      x: block.x + direction.x * BUILD_BLOCK_PITCH,
-      y: block.y + direction.y * BUILD_BLOCK_PITCH,
-    };
-    const delta = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
+    for (const offset of BUILD_SOCKET_OFFSETS) {
+      const candidate = {
+        x: block.x + offset.x,
+        y: block.y + offset.y,
+      };
+      if (isSocketOccupied(scene, candidate)) continue;
 
-    if (delta <= BUILD_LINE_SNAP_MAX && delta < bestDelta) {
-      bestPoint = candidate;
-      bestDelta = delta;
+      const delta = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
+      if (delta <= BUILD_SOCKET_SNAP_MAX && delta < bestDelta) {
+        bestPoint = candidate;
+        bestDelta = delta;
+      }
     }
   }
 
@@ -92,7 +112,7 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
               (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
         };
 
-  return snapToUniformBuildLine(this, rawPoint, direction);
+  return snapToNearestUniformSocket(this, rawPoint);
 };
 
 function calibrateTargetIndicator(scene) {
