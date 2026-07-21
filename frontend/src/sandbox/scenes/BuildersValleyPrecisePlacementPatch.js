@@ -12,8 +12,21 @@ const FRONT_POINT_TOLERANCE = 3;
 const OCCUPANCY_DISTANCE = TILE_SIZE * 0.7;
 const MAX_PRECISE_PLACEMENT_DISTANCE = TILE_SIZE * 1.5;
 
-function isFrontPlacementRequest(scene, worldX, worldY) {
+function resolveCanonicalPlacementPoint(scene) {
   const point = scene._getFrontPlacementPoint?.();
+  if (!point) return null;
+  return {
+    x: Math.round(point.x),
+    y: Math.round(point.y),
+  };
+}
+
+prototype._resolveCanonicalPlacementPoint = function resolvePlacementPoint() {
+  return resolveCanonicalPlacementPoint(this);
+};
+
+function isFrontPlacementRequest(scene, worldX, worldY) {
+  const point = scene._resolveCanonicalPlacementPoint?.();
   if (!point) return false;
   return Math.hypot(worldX - point.x, worldY - point.y) <= FRONT_POINT_TOLERANCE;
 }
@@ -29,16 +42,16 @@ function isInsideStream(x, y) {
 
 function isOccupied(scene, x, y) {
   return [...(scene.resourceNodes ?? []), ...(scene.placedBlocks ?? [])].some(
-    (object) => object?.active && Phaser.Math.Distance.Between(x, y, object.x, object.y) < OCCUPANCY_DISTANCE,
+    (object) =>
+      object?.active && Phaser.Math.Distance.Between(x, y, object.x, object.y) < OCCUPANCY_DISTANCE,
   );
 }
 
-function placeAtPreciseFrontPoint(scene, worldX, worldY) {
+function placeAtCanonicalPoint(scene, point) {
   const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
-  if (selectedItem?.kind !== "BLOCK") return;
+  if (selectedItem?.kind !== "BLOCK" || !point) return;
 
-  const x = Math.round(worldX);
-  const y = Math.round(worldY);
+  const { x, y } = point;
   const distance = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, x, y);
 
   if (distance > MAX_PRECISE_PLACEMENT_DISTANCE) {
@@ -87,31 +100,35 @@ function placeAtPreciseFrontPoint(scene, worldX, worldY) {
   scene._showStatus?.("วางบล็อกแล้ว");
 }
 
-prototype._tryPlaceSelectedBlock = function tryPlaceWithPreciseFrontGeometry(worldX, worldY) {
+prototype._tryPlaceSelectedBlock = function tryPlaceWithCanonicalGeometry(worldX, worldY) {
   if (!isFrontPlacementRequest(this, worldX, worldY)) {
     originalTryPlaceSelectedBlock.call(this, worldX, worldY);
     return;
   }
 
-  placeAtPreciseFrontPoint(this, worldX, worldY);
+  // Resolve once at action time and use this exact point for spawning. The
+  // prediction runtime below reads the same resolver, so preview and final block
+  // cannot diverge through separate rounding, snapping, or offset formulas.
+  placeAtCanonicalPoint(this, this._resolveCanonicalPlacementPoint?.());
 };
 
-prototype.update = function updateWithPrecisePlacementFeedback(time, delta) {
+prototype.update = function updateWithCanonicalPlacementFeedback(time, delta) {
   originalUpdate.call(this, time, delta);
 
   const prediction = this.__placementPrediction;
   if (prediction?.kind !== "PLACE_BLOCK" || !this.player) return;
 
-  const point = this._getFrontPlacementPoint?.();
+  const point = this._resolveCanonicalPlacementPoint?.();
   if (!point) return;
 
-  const x = Math.round(point.x);
-  const y = Math.round(point.y);
+  const { x, y } = point;
   const occupied = isOccupied(this, x, y);
   const insideStream = isInsideStream(x, y);
-  const outOfRange = Phaser.Math.Distance.Between(this.player.x, this.player.y, x, y) > MAX_PRECISE_PLACEMENT_DISTANCE;
+  const outOfRange =
+    Phaser.Math.Distance.Between(this.player.x, this.player.y, x, y) >
+    MAX_PRECISE_PLACEMENT_DISTANCE;
 
-  prediction.worldPoint = { x, y };
+  prediction.worldPoint = point;
   prediction.tile = {
     column: Math.floor(x / TILE_SIZE),
     row: Math.floor(y / TILE_SIZE),
@@ -123,5 +140,5 @@ prototype.update = function updateWithPrecisePlacementFeedback(time, delta) {
       ? "INSIDE_STREAM"
       : outOfRange
         ? "OUT_OF_RANGE"
-        : "COLLISION_ADJACENT_POINT_AVAILABLE";
+        : "CANONICAL_PLACEMENT_SOCKET_AVAILABLE";
 };
