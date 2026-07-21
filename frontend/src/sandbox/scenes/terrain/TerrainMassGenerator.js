@@ -1,71 +1,93 @@
-import { STREAM, TILE_SIZE, WORLD_HEIGHT } from "../../config/worldContract.js";
+import { STREAM, TILE_SIZE } from "../../config/worldContract.js";
 
-const LEFT_CLUSTERS = Object.freeze([
-  { x: -82, y: 42, scale: 1.08, variant: 0 },
-  { x: -60, y: 210, scale: 0.92, variant: 1 },
-  { x: -88, y: 690, scale: 1.02, variant: 2 },
-  { x: -58, y: 874, scale: 0.88, variant: 0 },
+const CLUSTERS = Object.freeze([
+  { side: "left", sample: 2, offset: 58, scale: 1.05, variant: 0 },
+  { side: "right", sample: 4, offset: 52, scale: 0.9, variant: 1 },
+  { side: "left", sample: 8, offset: 66, scale: 0.82, variant: 1 },
+  { side: "right", sample: 10, offset: 72, scale: 1.08, variant: 0 },
+  { side: "left", sample: 21, offset: 62, scale: 0.96, variant: 0 },
+  { side: "right", sample: 24, offset: 58, scale: 0.88, variant: 1 },
+  { side: "left", sample: 28, offset: 70, scale: 0.9, variant: 1 },
 ]);
 
-const RIGHT_CLUSTERS = Object.freeze([
-  { x: 50, y: 92, scale: 1.02, variant: 1 },
-  { x: 74, y: 260, scale: 1.12, variant: 2 },
-  { x: 58, y: 710, scale: 0.98, variant: 0 },
-  { x: 82, y: 892, scale: 0.86, variant: 1 },
-]);
-
-function addRock(scene, container, x, y, width, height, color, capColor, rotation = 0) {
-  const rock = scene.add.container(x, y).setRotation(rotation);
-  const shadow = scene.add.ellipse(6, height * 0.3, width * 1.08, height * 0.52, 0x22302f, 0.34);
-  const body = scene.add.ellipse(0, 0, width, height, color, 0.98);
-  const upper = scene.add.ellipse(-width * 0.08, -height * 0.18, width * 0.82, height * 0.46, capColor, 0.96);
-  const moss = scene.add.ellipse(-width * 0.14, -height * 0.32, width * 0.48, Math.max(5, height * 0.12), 0x78925f, 0.88);
-  rock.add([shadow, body, upper, moss]);
-  container.add(rock);
+function isInsideZone(y, zone) {
+  return y >= zone.y && y <= zone.y + zone.height;
 }
 
-function addCluster(scene, container, anchorX, anchorY, scale, variant, side) {
+function addRock(scene, container, x, y, radius, variant = 0) {
+  const shadow = scene.add.ellipse(x + 5, y + radius * 0.45, radius * 2.15, radius * 0.78, 0x23302e, 0.34);
+  const base = scene.add.circle(x, y, radius, variant ? 0x4b5956 : 0x445451, 1);
+  const upper = scene.add.ellipse(x - radius * 0.16, y - radius * 0.25, radius * 1.45, radius * 0.74, variant ? 0x69766b : 0x606f64, 0.98);
+  const moss = scene.add.ellipse(x - radius * 0.2, y - radius * 0.42, radius * 0.72, radius * 0.2, variant ? 0x748b5e : 0x6c8358, 0.88);
+  container.add([shadow, base, upper, moss]);
+}
+
+function addGroundConnection(scene, container, edgeX, y, side, scale) {
   const direction = side === "left" ? -1 : 1;
-  const palettes = [
-    [0x425150, 0x63716a],
-    [0x485653, 0x6a776d],
-    [0x3d4c4d, 0x5d6b67],
-  ];
-  const [bodyColor, capColor] = palettes[variant % palettes.length];
+  const stain = scene.add.ellipse(edgeX + direction * 34 * scale, y + 12, 84 * scale, 32 * scale, 0x566653, 0.26);
+  const contact = scene.add.ellipse(edgeX + direction * 15 * scale, y + 10, 44 * scale, 18 * scale, 0x27332f, 0.28);
+  container.add([stain, contact]);
 
-  addRock(scene, container, anchorX, anchorY, 60 * scale, 76 * scale, bodyColor, capColor, direction * -0.04);
-  addRock(scene, container, anchorX + direction * 35 * scale, anchorY + 25 * scale, 43 * scale, 55 * scale, bodyColor, capColor, direction * 0.08);
-  addRock(scene, container, anchorX - direction * 23 * scale, anchorY + 38 * scale, 31 * scale, 39 * scale, bodyColor, capColor, direction * -0.1);
-
-  const pebbles = scene.add.graphics();
-  pebbles.fillStyle(variant % 2 === 0 ? 0x75817b : 0x697671, 0.92);
-  pebbles.fillEllipse(anchorX + direction * 48 * scale, anchorY + 57 * scale, 15 * scale, 10 * scale);
-  pebbles.fillEllipse(anchorX - direction * 35 * scale, anchorY + 66 * scale, 11 * scale, 8 * scale);
-  container.add(pebbles);
+  for (let index = 0; index < 3; index += 1) {
+    const pebble = scene.add.circle(
+      edgeX + direction * (10 + index * 12) * scale,
+      y + 7 + (index % 2) * 8,
+      (4 + (index % 2) * 2) * scale,
+      index % 2 ? 0x748078 : 0x65716c,
+      0.92,
+    );
+    container.add(pebble);
+  }
 }
 
-export function createTerrainMasses(scene, crossingProtectionZone, depth = -10) {
+function addCluster(scene, container, geometry, spec) {
+  const samples = spec.side === "left" ? geometry.leftEdge : geometry.rightEdge;
+  const point = samples[Math.min(spec.sample, samples.length - 1)];
+  if (!point || isInsideZone(point.y, geometry.crossingProtectionZone)) return;
+
+  const direction = spec.side === "left" ? -1 : 1;
+  const anchorX = point.x + direction * spec.offset;
+  const anchorY = point.y;
+  const scale = spec.scale;
+
+  addGroundConnection(scene, container, point.x, anchorY, spec.side, scale);
+  addRock(scene, container, anchorX, anchorY, 29 * scale, spec.variant);
+  addRock(scene, container, anchorX + direction * 28 * scale, anchorY + 18 * scale, 20 * scale, (spec.variant + 1) % 2);
+  addRock(scene, container, anchorX - direction * 18 * scale, anchorY + 28 * scale, 15 * scale, spec.variant);
+}
+
+function addGorgeShoulders(scene, container, geometry) {
+  const left = geometry.leftEdge[2];
+  const right = geometry.rightEdge[2];
+  if (!left || !right) return;
+
+  const gorgeShadow = scene.add.ellipse((left.x + right.x) / 2, 112, right.x - left.x + 92, 76, 0x1f2b2a, 0.34);
+  container.add(gorgeShadow);
+
+  [
+    { x: left.x - 38, side: "left", variant: 0 },
+    { x: right.x + 38, side: "right", variant: 1 },
+  ].forEach((shoulder) => {
+    const direction = shoulder.side === "left" ? -1 : 1;
+    addRock(scene, container, shoulder.x, 88, 34, shoulder.variant);
+    addRock(scene, container, shoulder.x + direction * 28, 118, 24, (shoulder.variant + 1) % 2);
+    addRock(scene, container, shoulder.x - direction * 10, 142, 17, shoulder.variant);
+  });
+}
+
+export function createTerrainMasses(scene, geometry, depth = -10) {
   const container = scene.add.container(0, 0).setDepth(depth);
   const terraces = scene.add.graphics();
 
-  LEFT_CLUSTERS.forEach((cluster) => {
-    const y = Math.min(cluster.y, WORLD_HEIGHT - 92);
-    if (y >= crossingProtectionZone.y && y <= crossingProtectionZone.y + crossingProtectionZone.height) return;
-    addCluster(scene, container, STREAM.left + cluster.x, y, cluster.scale, cluster.variant, "left");
-  });
+  addGorgeShoulders(scene, container, geometry);
+  CLUSTERS.forEach((spec) => addCluster(scene, container, geometry, spec));
 
-  RIGHT_CLUSTERS.forEach((cluster) => {
-    const y = Math.min(cluster.y, WORLD_HEIGHT - 92);
-    if (y >= crossingProtectionZone.y && y <= crossingProtectionZone.y + crossingProtectionZone.height) return;
-    addCluster(scene, container, STREAM.left + STREAM.width + cluster.x, y, cluster.scale, cluster.variant, "right");
-  });
-
-  terraces.fillStyle(0x8c805b, 0.31);
-  terraces.fillEllipse(STREAM.left - 3.2 * TILE_SIZE, 13.4 * TILE_SIZE, 4.9 * TILE_SIZE, 2.35 * TILE_SIZE);
-  terraces.fillEllipse(STREAM.left + STREAM.width + 3.4 * TILE_SIZE, 11.4 * TILE_SIZE, 5.4 * TILE_SIZE, 3.25 * TILE_SIZE);
-  terraces.fillStyle(0xb4a06e, 0.23);
-  terraces.fillEllipse(STREAM.left - 3 * TILE_SIZE, 13.1 * TILE_SIZE, 3.8 * TILE_SIZE, 1.7 * TILE_SIZE);
-  terraces.fillEllipse(STREAM.left + STREAM.width + 3.2 * TILE_SIZE, 11.1 * TILE_SIZE, 4.3 * TILE_SIZE, 2.45 * TILE_SIZE);
+  terraces.fillStyle(0x887b59, 0.28);
+  terraces.fillEllipse(STREAM.left - 3.2 * TILE_SIZE, 14 * TILE_SIZE, 5.4 * TILE_SIZE, 2.6 * TILE_SIZE);
+  terraces.fillEllipse(STREAM.left + STREAM.width + 3.2 * TILE_SIZE, 11.5 * TILE_SIZE, 6 * TILE_SIZE, 3.6 * TILE_SIZE);
+  terraces.fillStyle(0xb09a68, 0.2);
+  terraces.fillEllipse(STREAM.left - 2.7 * TILE_SIZE, 14 * TILE_SIZE, 3.8 * TILE_SIZE, 1.7 * TILE_SIZE);
+  terraces.fillEllipse(STREAM.left + STREAM.width + 3.1 * TILE_SIZE, 11.5 * TILE_SIZE, 4.5 * TILE_SIZE, 2.5 * TILE_SIZE);
 
   container.add(terraces);
   return container;
