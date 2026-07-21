@@ -9,11 +9,12 @@ import { composeGorge } from "./terrain/GorgeComposer.js";
 import { composeWorkshopTerrace } from "./terrain/WorkshopTerraceComposer.js";
 import { composeBridgeApproach } from "./terrain/BridgeApproachComposer.js";
 import { composeForestPocket } from "./terrain/ForestPocketComposer.js";
+import { composeForegroundFraming } from "./terrain/ForegroundFramingComposer.js";
 
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_AUTHORED_COMPOSITION_V5";
+const STANDARD = "BUILDERS_VALLEY_PES_001B_COMPOSITION_CLEANUP_V6";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
@@ -24,6 +25,7 @@ const MODULES = Object.freeze([
   "WorkshopTerraceComposer",
   "BridgeApproachComposer",
   "ForestPocketComposer",
+  "ForegroundFramingComposer",
 ]);
 
 function retireSupersededBlockout(scene) {
@@ -49,12 +51,13 @@ function installTerrainRiverFoundation(scene) {
     workshopTerrace: composeWorkshopTerrace(scene),
     bridgeApproach: composeBridgeApproach(scene),
     forestPocket: composeForestPocket(scene),
+    foregroundFraming: composeForegroundFraming(scene),
   };
 
   const runtime = {
     standard: STANDARD,
-    status: "AUTHORED_ENVIRONMENT_COMPOSITION_STARTED",
-    phase: "PES-001B_PHASE_2D",
+    status: "COMPOSITION_CLEANUP_MATERIAL_PASS_STARTED",
+    phase: "PES-001B_PHASE_2E",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
@@ -65,19 +68,21 @@ function installTerrainRiverFoundation(scene) {
     authoredZones,
     modules: MODULES,
     visualTargets: Object.freeze([
-      "authored waterfall gorge",
-      "workshop terrace integration",
+      "organic forest ground patches",
+      "rock-shelf gorge mouth",
+      "workshop yard and retaining terrace",
+      "restrained foreground depth framing",
       "protected bridge approach clearing",
-      "left-side forest pocket rhythm",
-      "centerline drift and width rhythm",
       "spawn-to-bridge-to-workshop guidance",
     ]),
     renderModel: Object.freeze({
       riverSilhouette: "DRIFTED_CONTINUOUS_POLYGON",
-      waterfallTransition: "AUTHORED_GORGE_COMPOSITION",
+      waterfallTransition: "AUTHORED_ROCK_SHELF_GORGE",
       shoreline: "VARIABLE_RECESS_SHELF_BANDS",
       terrainMasses: "SHORELINE_INTEGRATED_ROCK_CLUSTERS",
-      environmentComposition: "AUTHORED_ZONE_COMPOSERS",
+      environmentComposition: "CLEANED_AUTHORED_ZONE_COMPOSERS",
+      materialPass: "GROUND_ROCK_WOOD_DEPTH_VARIATION",
+      foregroundDepth: "CONTROLLED_NON_BLOCKING_FRAMING",
       collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
     }),
     gameplayGeometryChanged: false,
