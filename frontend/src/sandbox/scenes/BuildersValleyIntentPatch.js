@@ -100,18 +100,20 @@ prototype._updateTargetResource = function updateTargetWithIntent() {
 
   const currentTarget = this.targetResource;
   const targetChanged = currentTarget !== previousTarget;
-  if (!targetChanged || !currentTarget) return;
+  if (!targetChanged) return;
 
   const materialSlot = findMaterialSlot(this, this.__placementIntentMaterial);
-  const isJustPlacedIntentTarget = currentTarget === this.__lastPlacedIntentTarget;
 
-  if (isJustPlacedIntentTarget && materialSlot >= 0) {
-    const nextMaterial = this.hotbarSlots[materialSlot].item.resourceType;
-    this.__placementIntentMaterial = nextMaterial;
+  if (!currentTarget) {
+    this.__lastPlacedIntentTarget = null;
     autoSelect(this, materialSlot);
     return;
   }
 
-  this.__placementIntentMaterial = null;
-  this.__lastPlacedIntentTarget = null;
+  const isJustPlacedIntentTarget = currentTarget === this.__lastPlacedIntentTarget;
+  if (isJustPlacedIntentTarget && materialSlot >= 0) {
+    const nextMaterial = this.hotbarSlots[materialSlot].item.resourceType;
+    this.__placementIntentMaterial = nextMaterial;
+    autoSelect(this, materialSlot);
+  }
 };
