@@ -9,7 +9,7 @@ import { createWaterRenderer } from "./terrain/WaterRenderer.js";
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V3";
+const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V4";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
@@ -38,30 +38,31 @@ function installTerrainRiverFoundation(scene) {
 
   const runtime = {
     standard: STANDARD,
-    status: "TARGETED_NATURALIZATION_PATCH_STARTED",
-    phase: "PES-001B_PHASE_2B",
+    status: "GORGE_NATURALIZATION_PATCH_STARTED",
+    phase: "PES-001B_PHASE_2C",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
     shorelines: createShorelines(scene, geometry),
-    terrainMasses: createTerrainMasses(scene, geometry.crossingProtectionZone),
+    terrainMasses: createTerrainMasses(scene, geometry),
     paths: paths.container,
     pathAnchors: paths.anchors,
     modules: MODULES,
-    renderModel: Object.freeze({
-      riverSilhouette: "CONTINUOUS_POLYGON",
-      shoreline: "SHARED_EDGE_BANDS",
-      terrainMasses: "LAYERED_ROCK_CLUSTERS",
-      collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
-    }),
     visualTargets: Object.freeze([
-      "continuous river silhouette",
-      "shared water and shoreline edges",
-      "asymmetric rock-cluster framing",
+      "centerline drift and width rhythm",
+      "waterfall gorge pool continuity",
+      "recess and shelf shoreline grammar",
+      "shoreline-integrated rock clusters",
       "protected bridge clearing",
-      "waterfall-to-river continuity",
       "spawn-to-bridge-to-workshop guidance",
     ]),
+    renderModel: Object.freeze({
+      riverSilhouette: "DRIFTED_CONTINUOUS_POLYGON",
+      waterfallTransition: "GORGE_POOL_FUNNEL",
+      shoreline: "VARIABLE_RECESS_SHELF_BANDS",
+      terrainMasses: "SHORELINE_INTEGRATED_ROCK_CLUSTERS",
+      collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
+    }),
     gameplayGeometryChanged: false,
   };
 
@@ -82,13 +83,14 @@ function installTerrainRiverFoundation(scene) {
       top: geometry.corridor.top,
       width: geometry.corridor.width,
       height: geometry.corridor.height,
-      sampleCount: geometry.leftEdge.length,
+      sampleCount: geometry.edgeSamples.length,
       profilePointCount: geometry.profile.length,
     },
     crossingProtectionZone: { ...geometry.crossingProtectionZone },
+    gorgeTransitionZone: { ...geometry.gorgeTransitionZone },
     pathAnchors: cloneAnchors(runtime.pathAnchors),
-    renderModel: { ...runtime.renderModel },
     visualTargets: [...runtime.visualTargets],
+    renderModel: { ...runtime.renderModel },
     modules: [...runtime.modules],
     supersededBlockoutHidden: true,
     gameplayGeometryChanged: false,
