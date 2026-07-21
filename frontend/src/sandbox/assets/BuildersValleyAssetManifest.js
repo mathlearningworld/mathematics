@@ -1,7 +1,7 @@
 export const BUILDERS_VALLEY_ASSET_PIPELINE_STANDARD =
   "BUILDERS_VALLEY_PRODUCTION_ASSET_PIPELINE_V1";
 
-export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V1";
+export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V2";
 
 export const BUILDERS_VALLEY_ASSET_FAMILIES = Object.freeze([
   "GROUND",
@@ -34,20 +34,16 @@ function asset(definition) {
   });
 }
 
-/**
- * Production asset declarations are intentionally disabled until the
- * corresponding binary files are delivered and reviewed. The pipeline loads
- * only records with enabled=true, keeping the approved Graphics composition as
- * the deterministic fallback.
- */
 export const BUILDERS_VALLEY_ASSETS = Object.freeze([
   asset({
     id: "BV_GROUND_TERRAIN_ATLAS_01",
     family: "GROUND",
     sourceType: "ATLAS",
-    textureUrl: "/assets/builders-valley/ground/terrain-atlas.png",
+    textureUrl: "/assets/builders-valley/ground/terrain-atlas.svg",
     dataUrl: "/assets/builders-valley/ground/terrain-atlas.json",
     layer: "ground",
+    enabled: true,
+    required: true,
     replacementTarget: "terrain material and path surfaces",
   }),
   asset({
