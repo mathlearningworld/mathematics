@@ -14,7 +14,7 @@ import { composeForegroundFraming } from "./terrain/ForegroundFramingComposer.js
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_COMPOSITION_CLEANUP_V6";
+const STANDARD = "BUILDERS_VALLEY_PES_002B_ORGANIC_RIVER_GEOMETRY_V1";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
@@ -56,8 +56,8 @@ function installTerrainRiverFoundation(scene) {
 
   const runtime = {
     standard: STANDARD,
-    status: "COMPOSITION_CLEANUP_MATERIAL_PASS_STARTED",
-    phase: "PES-001B_PHASE_2E",
+    status: "ORGANIC_RIVER_GEOMETRY_ACTIVE",
+    phase: "PES-002B",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
@@ -68,22 +68,28 @@ function installTerrainRiverFoundation(scene) {
     authoredZones,
     modules: MODULES,
     visualTargets: Object.freeze([
+      "narrow waterfall throat",
+      "wide upper gorge pool",
+      "compressed mid-channel neck",
+      "protected wide bridge reach",
+      "rhythmic lower river pool and exit",
       "organic forest ground patches",
       "rock-shelf gorge mouth",
       "workshop yard and retaining terrace",
       "restrained foreground depth framing",
-      "protected bridge approach clearing",
       "spawn-to-bridge-to-workshop guidance",
     ]),
     renderModel: Object.freeze({
-      riverSilhouette: "DRIFTED_CONTINUOUS_POLYGON",
-      waterfallTransition: "AUTHORED_ROCK_SHELF_GORGE",
+      riverSilhouette: "ORGANIC_WIDTH_RHYTHM_CONTINUOUS_POLYGON",
+      waterfallTransition: "NARROW_THROAT_TO_WIDE_AUTHORED_GORGE_POOL",
+      bridgeReach: "PROTECTED_WIDE_CROSSING_BAND",
+      lowerRiver: "NECK_POOL_BEND_TAPER_SEQUENCE",
       shoreline: "VARIABLE_RECESS_SHELF_BANDS",
       terrainMasses: "SHORELINE_INTEGRATED_ROCK_CLUSTERS",
-      environmentComposition: "CLEANED_AUTHORED_ZONE_COMPOSERS",
+      environmentComposition: "FIVE_LAYER_HERO_FRAME_ALIGNED",
       materialPass: "GROUND_ROCK_WOOD_DEPTH_VARIATION",
       foregroundDepth: "CONTROLLED_NON_BLOCKING_FRAMING",
-      collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
+      collisionAuthority: geometry.collisionAuthority,
     }),
     gameplayGeometryChanged: false,
   };
@@ -107,7 +113,10 @@ function installTerrainRiverFoundation(scene) {
       height: geometry.corridor.height,
       sampleCount: geometry.edgeSamples.length,
       profilePointCount: geometry.profile.length,
+      widthRange: { ...geometry.widthRange },
+      visualGeometryPolicy: geometry.visualGeometryPolicy,
     },
+    shapeZones: geometry.shapeZones.map((zone) => ({ ...zone })),
     crossingProtectionZone: { ...geometry.crossingProtectionZone },
     gorgeTransitionZone: { ...geometry.gorgeTransitionZone },
     pathAnchors: cloneAnchors(runtime.pathAnchors),
@@ -118,6 +127,20 @@ function installTerrainRiverFoundation(scene) {
     supersededBlockoutHidden: true,
     gameplayGeometryChanged: false,
   });
+  window.__BUILDERS_VALLEY__.debugRiverGeometry = () => {
+    const state = window.__BUILDERS_VALLEY__.getTerrainRiverFoundation();
+    console.group(`Builders Valley River Geometry — ${state.packageStatus}`);
+    console.table(state.shapeZones.map((zone) => ({
+      zone: zone.id,
+      startY: zone.startY,
+      endY: zone.endY,
+      widthIntent: zone.widthIntent,
+      purpose: zone.purpose,
+    })));
+    console.log(state);
+    console.groupEnd();
+    return state;
+  };
 }
 
 prototype.create = function createWithTerrainRiverFoundation() {
