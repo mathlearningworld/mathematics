@@ -4,6 +4,7 @@
  * the default client now boots the Builder's Valley sandbox.
  */
 import { createSandboxGame } from "./sandbox/createSandboxGame.js";
+import "./sandbox/scenes/BuildersValleyFeedbackPatch.js";
 
 try {
   const game = createSandboxGame();
