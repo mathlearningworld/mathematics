@@ -3,15 +3,17 @@ import { BuildersValleyScene } from "./BuildersValleyScene.js";
 const prototype = BuildersValleyScene.prototype;
 const originalUpdate = prototype.update;
 
-// The player container's world point is close to the ground anchor, but it is
-// not itself a complete interaction footprint. Keep one authoritative visual
-// foot reference and derive every front placement direction from it.
+// The player container is anchored at the ground/foot point. Placement in front
+// and behind uses that ground point directly, while left/right placement must
+// align the block's bottom edge with the same ground line rather than placing
+// the block centre on it.
 const PLAYER_VISUAL_FOOT_Y_OFFSET = 1;
 const PLAYER_FOOTPRINT_HALF_WIDTH = 13;
 const PLAYER_FOOTPRINT_HALF_HEIGHT = 5;
 const BLOCK_VISUAL_HALF_WIDTH = 14;
 const BLOCK_VISUAL_HALF_HEIGHT = 13;
 const PLACEMENT_GAP = 1;
+const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
 const PLACED_BLOCK_FOCUS_SCALE = 0.68;
 const NATURAL_RESOURCE_FOCUS_SCALE = 1;
@@ -50,7 +52,7 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
         foot.x +
         direction.x *
           (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_VISUAL_HALF_WIDTH + PLACEMENT_GAP),
-      y: foot.y,
+      y: foot.y + HORIZONTAL_BLOCK_CENTER_Y_OFFSET,
     };
   }
 
