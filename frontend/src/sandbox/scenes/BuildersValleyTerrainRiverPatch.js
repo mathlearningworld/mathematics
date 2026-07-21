@@ -9,7 +9,7 @@ import { createWaterRenderer } from "./terrain/WaterRenderer.js";
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V2";
+const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V3";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
@@ -38,8 +38,8 @@ function installTerrainRiverFoundation(scene) {
 
   const runtime = {
     standard: STANDARD,
-    status: "ENVIRONMENT_PRODUCTION_STARTED",
-    phase: "PES-001B_PHASE_2",
+    status: "TARGETED_NATURALIZATION_PATCH_STARTED",
+    phase: "PES-001B_PHASE_2B",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
@@ -48,9 +48,16 @@ function installTerrainRiverFoundation(scene) {
     paths: paths.container,
     pathAnchors: paths.anchors,
     modules: MODULES,
+    renderModel: Object.freeze({
+      riverSilhouette: "CONTINUOUS_POLYGON",
+      shoreline: "SHARED_EDGE_BANDS",
+      terrainMasses: "LAYERED_ROCK_CLUSTERS",
+      collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
+    }),
     visualTargets: Object.freeze([
-      "variable river width",
-      "asymmetric cliff framing",
+      "continuous river silhouette",
+      "shared water and shoreline edges",
+      "asymmetric rock-cluster framing",
       "protected bridge clearing",
       "waterfall-to-river continuity",
       "spawn-to-bridge-to-workshop guidance",
@@ -75,11 +82,12 @@ function installTerrainRiverFoundation(scene) {
       top: geometry.corridor.top,
       width: geometry.corridor.width,
       height: geometry.corridor.height,
-      segmentCount: geometry.segments.length,
+      sampleCount: geometry.leftEdge.length,
       profilePointCount: geometry.profile.length,
     },
     crossingProtectionZone: { ...geometry.crossingProtectionZone },
     pathAnchors: cloneAnchors(runtime.pathAnchors),
+    renderModel: { ...runtime.renderModel },
     visualTargets: [...runtime.visualTargets],
     modules: [...runtime.modules],
     supersededBlockoutHidden: true,
