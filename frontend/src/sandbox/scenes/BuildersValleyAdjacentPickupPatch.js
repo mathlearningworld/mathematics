@@ -4,17 +4,36 @@ import { BuildersValleyScene } from "./BuildersValleyScene.js";
 const prototype = BuildersValleyScene.prototype;
 const originalUpdateTargetResource = prototype._updateTargetResource;
 
-// A pickup target may be focused only when the player is genuinely adjacent.
-// Keep this below one full tile so standing one tile away never activates pickup.
-const ADJACENT_PICKUP_DISTANCE = TILE_SIZE * 0.85;
+// Pickup is allowed only when collision bounds are genuinely touching or nearly touching.
+const ADJACENT_BODY_GAP_MAX = 4;
 
-function distanceFromPlayer(scene, target) {
-  if (!scene.player || !target) return Number.POSITIVE_INFINITY;
-  return Math.hypot(target.x - scene.player.x, target.y - scene.player.y);
+function getBounds(object) {
+  const body = object?.body;
+  if (body && Number.isFinite(body.left) && Number.isFinite(body.right)) {
+    return { left: body.left, right: body.right, top: body.top, bottom: body.bottom };
+  }
+
+  const width = object?.displayWidth ?? object?.width ?? TILE_SIZE;
+  const height = object?.displayHeight ?? object?.height ?? TILE_SIZE;
+  return {
+    left: object.x - width / 2,
+    right: object.x + width / 2,
+    top: object.y - height / 2,
+    bottom: object.y + height / 2,
+  };
+}
+
+function bodyGap(leftObject, rightObject) {
+  if (!leftObject || !rightObject) return Number.POSITIVE_INFINITY;
+  const left = getBounds(leftObject);
+  const right = getBounds(rightObject);
+  const gapX = Math.max(0, left.left - right.right, right.left - left.right);
+  const gapY = Math.max(0, left.top - right.bottom, right.top - left.bottom);
+  return Math.hypot(gapX, gapY);
 }
 
 function isAdjacent(scene, target) {
-  return Boolean(target?.active) && distanceFromPlayer(scene, target) < ADJACENT_PICKUP_DISTANCE;
+  return Boolean(target?.active) && bodyGap(scene.player, target) <= ADJACENT_BODY_GAP_MAX;
 }
 
 function clearOutOfRangeTarget(scene) {
