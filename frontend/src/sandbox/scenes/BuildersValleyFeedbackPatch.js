@@ -5,9 +5,19 @@ const originalCreate = prototype.create;
 const originalUpdate = prototype.update;
 
 const GHOST_FILL = Object.freeze({
-  wood: 0x9a5f3a,
-  stone: 0x71808a,
+  wood: 0x865437,
+  stone: 0x66727a,
 });
+
+const GHOST_LIGHT = Object.freeze({
+  wood: 0xb87945,
+  stone: 0x96a1a5,
+});
+
+const OUTLINE = 0x202e32;
+const SHADOW = 0x17252c;
+const VALID_STROKE = 0xffd65a;
+const INVALID_STROKE = 0xe55b55;
 
 function snapshotFeedback(scene) {
   const prediction = scene.__placementPrediction;
@@ -24,24 +34,41 @@ function snapshotFeedback(scene) {
 }
 
 function createPlacementGhost(scene) {
-  // Match createPlacedBlock's visual anchor exactly so preview and placed result
-  // occupy the same apparent footprint, not merely the same world coordinate.
-  const shadow = scene.add.ellipse(0, 9, 29, 9, 0x111820, 0.28);
-  const block = scene.add.rectangle(0, 1, 28, 22, GHOST_FILL.wood, 0.42);
-  block.setStrokeStyle(2, 0xffd65a, 0.95);
+  // Mirror createPlacedBlock exactly: all child geometry uses the same local
+  // coordinates, so the preview silhouette and the final block share one visual
+  // anchor as well as one world point.
+  const shadow = scene.add.ellipse(0, 9, 29, 9, SHADOW, 0.18);
+  const front = scene.add.rectangle(0, 1, 28, 22, OUTLINE, 0.55);
+  const face = scene.add.rectangle(0, -1, 24, 17, GHOST_FILL.wood, 0.38);
+  const top = scene.add.rectangle(0, -10, 24, 6, GHOST_LIGHT.wood, 0.46);
+  const seam = scene.add.rectangle(6, -1, 3, 15, OUTLINE, 0.2);
 
-  const highlight = scene.add.rectangle(-5, -7, 12, 5, 0xffffff, 0.24);
-  const invalidMarkA = scene.add.rectangle(0, 1, 24, 3, 0xe55b55, 0.95).setAngle(45);
-  const invalidMarkB = scene.add.rectangle(0, 1, 24, 3, 0xe55b55, 0.95).setAngle(-45);
+  const frame = scene.add.rectangle(0, 0, 30, 24, 0xffffff, 0);
+  frame.setStrokeStyle(2, VALID_STROKE, 0.95);
 
-  const container = scene.add.container(0, 0, [shadow, block, highlight, invalidMarkA, invalidMarkB]);
+  const invalidMarkA = scene.add.rectangle(0, 0, 24, 3, INVALID_STROKE, 0.95).setAngle(45);
+  const invalidMarkB = scene.add.rectangle(0, 0, 24, 3, INVALID_STROKE, 0.95).setAngle(-45);
+
+  const container = scene.add.container(0, 0, [
+    shadow,
+    front,
+    face,
+    top,
+    seam,
+    frame,
+    invalidMarkA,
+    invalidMarkB,
+  ]);
   container.setVisible(false);
 
   return {
     container,
     shadow,
-    block,
-    highlight,
+    front,
+    face,
+    top,
+    seam,
+    frame,
     invalidMarkA,
     invalidMarkB,
     lastResourceType: null,
@@ -65,23 +92,28 @@ function renderPlacementFeedback(scene, time) {
   }
 
   const valid = Boolean(prediction.valid);
-  const fill = GHOST_FILL[prediction.resourceType] ?? GHOST_FILL.wood;
-  const pulse = 0.36 + Math.sin((time ?? 0) / 180) * 0.07;
+  const resourceType = prediction.resourceType;
+  const fill = GHOST_FILL[resourceType] ?? GHOST_FILL.wood;
+  const light = GHOST_LIGHT[resourceType] ?? GHOST_LIGHT.wood;
+  const pulse = 0.34 + Math.sin((time ?? 0) / 180) * 0.06;
 
   ghost.container
     .setVisible(true)
-    .setPosition(prediction.worldPoint.x, prediction.worldPoint.y)
+    .setPosition(Math.round(prediction.worldPoint.x), Math.round(prediction.worldPoint.y))
     .setDepth(150 + Math.floor(prediction.worldPoint.y));
 
-  ghost.block
-    .setFillStyle(fill, valid ? pulse : 0.24)
-    .setStrokeStyle(2, valid ? 0xffd65a : 0xe55b55, valid ? 0.95 : 1);
-  ghost.shadow.setAlpha(valid ? 0.28 : 0.16);
-  ghost.highlight.setVisible(valid).setAlpha(valid ? 0.24 : 0);
+  ghost.front.setFillStyle(OUTLINE, valid ? 0.52 : 0.34);
+  ghost.face.setFillStyle(fill, valid ? pulse : 0.2);
+  ghost.top.setFillStyle(light, valid ? Math.min(0.62, pulse + 0.12) : 0.22);
+  ghost.seam
+    .setPosition(resourceType === "wood" ? 6 : -6, -1)
+    .setFillStyle(OUTLINE, valid ? 0.2 : 0.12);
+  ghost.shadow.setAlpha(valid ? 0.18 : 0.1);
+  ghost.frame.setStrokeStyle(2, valid ? VALID_STROKE : INVALID_STROKE, valid ? 0.95 : 1);
   ghost.invalidMarkA.setVisible(!valid);
   ghost.invalidMarkB.setVisible(!valid);
 
-  ghost.lastResourceType = prediction.resourceType;
+  ghost.lastResourceType = resourceType;
   ghost.lastValid = valid;
 }
 
