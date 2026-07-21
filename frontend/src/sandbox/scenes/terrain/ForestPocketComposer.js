@@ -8,15 +8,28 @@ function addShrub(scene, container, x, y, scale, variant = 0) {
   container.add([shadow, back, mid, light]);
 }
 
+function addGroundPatch(graphics, x, y, width, height, color, alpha) {
+  graphics.fillStyle(color, alpha);
+  graphics.fillPoints([
+    { x: x - width * 0.48, y: y - height * 0.08 },
+    { x: x - width * 0.31, y: y - height * 0.42 },
+    { x: x + width * 0.05, y: y - height * 0.5 },
+    { x: x + width * 0.42, y: y - height * 0.28 },
+    { x: x + width * 0.5, y: y + height * 0.08 },
+    { x: x + width * 0.2, y: y + height * 0.46 },
+    { x: x - width * 0.18, y: y + height * 0.38 },
+    { x: x - width * 0.5, y: y + height * 0.16 },
+  ], true);
+}
+
 export function composeForestPocket(scene, depth = 44) {
   const container = scene.add.container(0, 0).setDepth(depth);
   const ground = scene.add.graphics();
 
-  ground.fillStyle(0x315c38, 0.16);
-  ground.fillEllipse(6 * TILE_SIZE, 5.5 * TILE_SIZE, 310, 210);
-  ground.fillEllipse(9 * TILE_SIZE, 22 * TILE_SIZE, 250, 170);
-  ground.fillStyle(0x7e714d, 0.2);
-  ground.fillEllipse(8 * TILE_SIZE, 11 * TILE_SIZE, 120, 54);
+  addGroundPatch(ground, 5.7 * TILE_SIZE, 5.3 * TILE_SIZE, 250, 160, 0x315c38, 0.12);
+  addGroundPatch(ground, 8.3 * TILE_SIZE, 5.8 * TILE_SIZE, 150, 104, 0x2c5535, 0.1);
+  addGroundPatch(ground, 8.8 * TILE_SIZE, 21.8 * TILE_SIZE, 210, 132, 0x315c38, 0.11);
+  addGroundPatch(ground, 8 * TILE_SIZE, 11 * TILE_SIZE, 108, 44, 0x7e714d, 0.15);
 
   [
     [3.8 * TILE_SIZE, 4.4 * TILE_SIZE, 1.15, 0],
@@ -28,13 +41,12 @@ export function composeForestPocket(scene, depth = 44) {
   ].forEach(([x, y, scale, variant]) => addShrub(scene, container, x, y, scale, variant));
 
   const flowers = scene.add.graphics();
-  const points = [
+  [
     [5.8, 6.7, 0xe1b552],
     [7.4, 7.6, 0xd66b78],
     [8.8, 20.8, 0x8db5e8],
     [10.2, 22.8, 0xf0d06e],
-  ];
-  points.forEach(([x, y, color]) => {
+  ].forEach(([x, y, color]) => {
     flowers.fillStyle(color, 0.82);
     flowers.fillCircle(x * TILE_SIZE, y * TILE_SIZE, 3);
   });
