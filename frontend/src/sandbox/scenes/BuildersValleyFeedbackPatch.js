@@ -24,13 +24,15 @@ function snapshotFeedback(scene) {
 }
 
 function createPlacementGhost(scene) {
-  const shadow = scene.add.ellipse(0, 8, 30, 12, 0x111820, 0.28);
-  const block = scene.add.rectangle(0, 0, 28, 22, GHOST_FILL.wood, 0.42);
+  // Match createPlacedBlock's visual anchor exactly so preview and placed result
+  // occupy the same apparent footprint, not merely the same world coordinate.
+  const shadow = scene.add.ellipse(0, 9, 29, 9, 0x111820, 0.28);
+  const block = scene.add.rectangle(0, 1, 28, 22, GHOST_FILL.wood, 0.42);
   block.setStrokeStyle(2, 0xffd65a, 0.95);
 
-  const highlight = scene.add.rectangle(-5, -5, 12, 5, 0xffffff, 0.24);
-  const invalidMarkA = scene.add.rectangle(0, 0, 24, 3, 0xe55b55, 0.95).setAngle(45);
-  const invalidMarkB = scene.add.rectangle(0, 0, 24, 3, 0xe55b55, 0.95).setAngle(-45);
+  const highlight = scene.add.rectangle(-5, -7, 12, 5, 0xffffff, 0.24);
+  const invalidMarkA = scene.add.rectangle(0, 1, 24, 3, 0xe55b55, 0.95).setAngle(45);
+  const invalidMarkB = scene.add.rectangle(0, 1, 24, 3, 0xe55b55, 0.95).setAngle(-45);
 
   const container = scene.add.container(0, 0, [shadow, block, highlight, invalidMarkA, invalidMarkB]);
   container.setVisible(false);
