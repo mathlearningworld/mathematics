@@ -5,7 +5,7 @@ const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
 const ASSET_ID = "BV_WATER_RIVER_SHEET_01";
-const STANDARD = "BUILDERS_VALLEY_PES_001C1B_WATER_ASSET_V2";
+const STANDARD = "BUILDERS_VALLEY_PES_001C1B_WATER_ASSET_V3";
 const FRAME_COUNT = 4;
 
 function createRiverDetailOverlays(scene, geometry) {
@@ -16,21 +16,24 @@ function createRiverDetailOverlays(scene, geometry) {
   const samples = geometry.edgeSamples;
 
   // Keep the authored Graphics river as the continuous silhouette and use the
-  // production sheet only for restrained moving surface detail. This avoids
-  // visible seams and pinwheel patterns caused by rotating opaque square tiles.
+  // production sheet only for restrained moving surface detail. Each sprite
+  // keeps an immutable anchor so animation can never drift onto dry land.
   for (let index = 1; index < samples.length - 1; index += 2) {
     const sample = samples[index];
     const next = samples[Math.min(index + 1, samples.length - 1)];
     const drift = next.center - sample.center;
     const width = Math.max(54, sample.width - 34);
     const height = index < 4 ? 20 : 14;
+    const anchorX = sample.center + drift * 0.18;
 
     const sprite = scene.add
-      .image(sample.center + drift * 0.18, sample.y, ASSET_ID, index % FRAME_COUNT)
+      .image(anchorX, sample.y, ASSET_ID, index % FRAME_COUNT)
       .setDisplaySize(width, height)
       .setAlpha(index < 4 ? 0.28 : 0.2)
       .setBlendMode("ADD");
 
+    sprite.setData("riverAnchorX", anchorX);
+    sprite.setData("riverPhase", index % 4);
     sprites.push(sprite);
     container.add(sprite);
   }
@@ -42,11 +45,16 @@ function createRiverDetailOverlays(scene, geometry) {
     .setDisplaySize(Math.max(70, pool.width - 42), 18)
     .setAlpha(0.24)
     .setBlendMode("ADD");
+  gorgePool.setData("riverAnchorX", pool.center);
+  gorgePool.setData("riverPhase", 1);
+
   const waterfallLip = scene.add
     .image(top.center, 78, ASSET_ID, 2)
     .setDisplaySize(82, 12)
     .setAlpha(0.32)
     .setBlendMode("ADD");
+  waterfallLip.setData("riverAnchorX", top.center);
+  waterfallLip.setData("riverPhase", 2);
 
   sprites.push(gorgePool, waterfallLip);
   container.add([gorgePool, waterfallLip]);
@@ -63,11 +71,12 @@ function installWaterAssetReplacement(scene) {
     assetId: ASSET_ID,
     status: textureAvailable && foundation ? "ASSET_ACTIVE" : "FALLBACK_ACTIVE",
     fallbackOwner: "BuildersValleyTerrainRiverPatch",
-    compositionMode: "HYBRID_CONTINUOUS_BASE_WITH_ASSET_DETAIL",
+    compositionMode: "HYBRID_CONTINUOUS_BASE_WITH_ANCHORED_ASSET_DETAIL",
     segmentCount: 0,
     frameCount: FRAME_COUNT,
     animationIntervalMs: 260,
     fallbackHidden: false,
+    driftPolicy: "BOUNDED_ANCHOR_OSCILLATION",
     gameplayGeometryChanged: false,
   };
 
@@ -84,8 +93,11 @@ function installWaterAssetReplacement(scene) {
       callback: () => {
         runtime.frameIndex = (runtime.frameIndex + 1) % FRAME_COUNT;
         runtime.sprites.forEach((sprite, index) => {
+          const anchorX = sprite.getData("riverAnchorX");
+          const phase = sprite.getData("riverPhase") ?? 0;
+          const direction = (runtime.frameIndex + phase) % 2 === 0 ? 1 : -1;
           sprite.setFrame((runtime.frameIndex + index) % FRAME_COUNT);
-          sprite.x += index % 2 === 0 ? 0.5 : -0.5;
+          sprite.x = anchorX + direction * 1.5;
         });
       },
     });
@@ -104,6 +116,7 @@ function installWaterAssetReplacement(scene) {
     animationIntervalMs: runtime.animationIntervalMs,
     fallbackOwner: runtime.fallbackOwner,
     fallbackHidden: runtime.fallbackHidden,
+    driftPolicy: runtime.driftPolicy,
     gameplayGeometryChanged: false,
   });
 }
