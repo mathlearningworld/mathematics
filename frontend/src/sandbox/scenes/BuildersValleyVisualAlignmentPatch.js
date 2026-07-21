@@ -17,11 +17,11 @@ const PLACEMENT_GAP = 1;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
 // Every placed block exposes four canonical build sockets. Snapping to the
-// nearest free socket, rather than only the socket matching the current facing
-// direction, keeps centre-to-centre spacing identical even when the player
-// approaches an existing line from its opposite end or from a slight angle.
+// nearest free socket keeps centre-to-centre spacing identical. The snap window
+// stays deliberately smaller than one tile so a distant socket cannot pull the
+// preview away from the player's natural one-block placement reach.
 const BUILD_BLOCK_PITCH = TILE_SIZE;
-const BUILD_SOCKET_SNAP_MAX = TILE_SIZE * 0.9;
+const BUILD_SOCKET_SNAP_MAX = TILE_SIZE * 0.55;
 const OCCUPIED_SOCKET_EPSILON = 4;
 const BUILD_SOCKET_OFFSETS = Object.freeze([
   { x: BUILD_BLOCK_PITCH, y: 0 },
