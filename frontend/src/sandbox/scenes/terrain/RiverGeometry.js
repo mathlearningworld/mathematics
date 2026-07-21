@@ -1,18 +1,29 @@
 import { STREAM, TILE_SIZE, WORLD_HEIGHT } from "../../config/worldContract.js";
 
 const PROFILE = Object.freeze([
-  Object.freeze({ y: 0, centerOffset: 0, leftInset: 38, rightInset: 38 }),
-  Object.freeze({ y: 2 * TILE_SIZE, centerOffset: -4, leftInset: 30, rightInset: 34 }),
-  Object.freeze({ y: 5 * TILE_SIZE, centerOffset: -10, leftInset: 12, rightInset: 22 }),
-  Object.freeze({ y: 8 * TILE_SIZE, centerOffset: -5, leftInset: 4, rightInset: 12 }),
-  Object.freeze({ y: 10.5 * TILE_SIZE, centerOffset: 6, leftInset: 12, rightInset: 4 }),
-  Object.freeze({ y: 14 * TILE_SIZE, centerOffset: 0, leftInset: 12, rightInset: 12 }),
-  Object.freeze({ y: 17 * TILE_SIZE, centerOffset: -7, leftInset: 18, rightInset: 24 }),
-  Object.freeze({ y: 20.5 * TILE_SIZE, centerOffset: -2, leftInset: 3, rightInset: 12 }),
-  Object.freeze({ y: 24 * TILE_SIZE, centerOffset: 9, leftInset: 10, rightInset: 2 }),
-  Object.freeze({ y: 27 * TILE_SIZE, centerOffset: 4, leftInset: 20, rightInset: 10 }),
-  Object.freeze({ y: 29.5 * TILE_SIZE, centerOffset: -6, leftInset: 26, rightInset: 14 }),
-  Object.freeze({ y: WORLD_HEIGHT, centerOffset: 0, leftInset: 18, rightInset: 22 }),
+  Object.freeze({ y: 0, centerOffset: 0, leftInset: 46, rightInset: 46, zone: "waterfall-throat" }),
+  Object.freeze({ y: 2 * TILE_SIZE, centerOffset: -5, leftInset: 38, rightInset: 40, zone: "waterfall-lip" }),
+  Object.freeze({ y: 4.5 * TILE_SIZE, centerOffset: -12, leftInset: 12, rightInset: 18, zone: "upper-gorge-pool" }),
+  Object.freeze({ y: 7 * TILE_SIZE, centerOffset: -7, leftInset: 18, rightInset: 26, zone: "upper-gorge-release" }),
+  Object.freeze({ y: 9.5 * TILE_SIZE, centerOffset: 5, leftInset: 32, rightInset: 24, zone: "mid-channel-neck" }),
+  Object.freeze({ y: 12 * TILE_SIZE, centerOffset: 10, leftInset: 12, rightInset: 10, zone: "bridge-approach" }),
+  Object.freeze({ y: 15 * TILE_SIZE, centerOffset: 2, leftInset: 8, rightInset: 14, zone: "bridge-crossing" }),
+  Object.freeze({ y: 18 * TILE_SIZE, centerOffset: -9, leftInset: 22, rightInset: 30, zone: "lower-channel-neck" }),
+  Object.freeze({ y: 21 * TILE_SIZE, centerOffset: -4, leftInset: 10, rightInset: 8, zone: "lower-river-pool" }),
+  Object.freeze({ y: 24 * TILE_SIZE, centerOffset: 10, leftInset: 18, rightInset: 6, zone: "lower-river-bend" }),
+  Object.freeze({ y: 27 * TILE_SIZE, centerOffset: 5, leftInset: 32, rightInset: 20, zone: "lower-exit-neck" }),
+  Object.freeze({ y: 30 * TILE_SIZE, centerOffset: -7, leftInset: 22, rightInset: 30, zone: "foreground-release" }),
+  Object.freeze({ y: WORLD_HEIGHT, centerOffset: 0, leftInset: 16, rightInset: 24, zone: "world-exit" }),
+]);
+
+const SHAPE_ZONES = Object.freeze([
+  Object.freeze({ id: "waterfall-throat", startY: 0, endY: 2 * TILE_SIZE, widthIntent: "NARROW", purpose: "focus the waterfall drop" }),
+  Object.freeze({ id: "upper-gorge-pool", startY: 2 * TILE_SIZE, endY: 7 * TILE_SIZE, widthIntent: "WIDE", purpose: "create a readable waterfall basin" }),
+  Object.freeze({ id: "mid-channel-neck", startY: 7 * TILE_SIZE, endY: 10.5 * TILE_SIZE, widthIntent: "NARROW", purpose: "separate the gorge pool from the bridge reach" }),
+  Object.freeze({ id: "bridge-reach", startY: 10.5 * TILE_SIZE, endY: 17 * TILE_SIZE, widthIntent: "WIDE", purpose: "protect bridge readability and crossing space" }),
+  Object.freeze({ id: "lower-channel-neck", startY: 17 * TILE_SIZE, endY: 20 * TILE_SIZE, widthIntent: "NARROW", purpose: "restore visual rhythm below the bridge" }),
+  Object.freeze({ id: "lower-river-pool", startY: 20 * TILE_SIZE, endY: 25 * TILE_SIZE, widthIntent: "WIDE", purpose: "support foreground water depth" }),
+  Object.freeze({ id: "lower-exit", startY: 25 * TILE_SIZE, endY: WORLD_HEIGHT, widthIntent: "TAPERED", purpose: "lead the river out of frame" }),
 ]);
 
 function interpolate(start, end, ratio) {
@@ -66,11 +77,17 @@ export function createRiverGeometry() {
 
   const leftEdge = Object.freeze(edgeSamples.map((sample) => Object.freeze({ x: sample.left, y: sample.y })));
   const rightEdge = Object.freeze(edgeSamples.map((sample) => Object.freeze({ x: sample.right, y: sample.y })));
+  const widths = edgeSamples.map((sample) => sample.width);
 
   return Object.freeze({
     corridor: STREAM,
     sampleStep,
     profile: PROFILE,
+    shapeZones: SHAPE_ZONES,
+    widthRange: Object.freeze({
+      min: Math.min(...widths),
+      max: Math.max(...widths),
+    }),
     edgeSamples: Object.freeze(edgeSamples),
     leftEdge,
     rightEdge,
@@ -84,7 +101,9 @@ export function createRiverGeometry() {
       x: STREAM.left - TILE_SIZE,
       y: 0,
       width: STREAM.width + 2 * TILE_SIZE,
-      height: 6 * TILE_SIZE,
+      height: 7 * TILE_SIZE,
     }),
+    visualGeometryPolicy: "ORGANIC_WIDTH_RHYTHM_WITH_PROTECTED_CROSSING",
+    collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
   });
 }
