@@ -26,6 +26,7 @@ import "./sandbox/scenes/BuildersValleyGroundAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyWaterAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyCliffAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyRiverKitRuntimePatch.js";
+import "./sandbox/scenes/BuildersValleyLayerCompositionRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
 try {
