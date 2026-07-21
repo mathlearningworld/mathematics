@@ -4,25 +4,15 @@ import { BuildersValleyScene } from "./BuildersValleyScene.js";
 const prototype = BuildersValleyScene.prototype;
 const originalUpdate = prototype.update;
 
-// The player container is anchored at the ground/foot point. Placement in front
-// and behind uses that ground point directly, while left/right placement must
-// align the block's bottom edge with the same ground line rather than placing
-// the block centre on it.
 const PLAYER_VISUAL_FOOT_Y_OFFSET = 1;
-const PLAYER_FOOTPRINT_HALF_WIDTH = 13;
-const PLAYER_FOOTPRINT_HALF_HEIGHT = 5;
-const BLOCK_VISUAL_HALF_WIDTH = 14;
 const BLOCK_VISUAL_HALF_HEIGHT = 13;
-const PLACEMENT_GAP = 1;
+const FIXED_PLACEMENT_REACH = TILE_SIZE;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
-// Every placed block exposes four canonical build sockets. Snapping to the
-// nearest free socket keeps centre-to-centre spacing identical. The snap window
-// stays deliberately smaller than one tile so a distant socket cannot pull the
-// preview away from the player's natural one-block placement reach.
 const BUILD_BLOCK_PITCH = TILE_SIZE;
-const BUILD_SOCKET_SNAP_MAX = TILE_SIZE * 0.55;
+const BUILD_SOCKET_SNAP_MAX = 6;
 const OCCUPIED_SOCKET_EPSILON = 4;
+const RAW_POINT_BLOCK_RADIUS = TILE_SIZE * 0.7;
 const BUILD_SOCKET_OFFSETS = Object.freeze([
   { x: BUILD_BLOCK_PITCH, y: 0 },
   { x: -BUILD_BLOCK_PITCH, y: 0 },
@@ -57,11 +47,27 @@ function isSocketOccupied(scene, candidate) {
   );
 }
 
+function isRawPointBlocked(scene, rawPoint) {
+  return (scene.placedBlocks ?? []).some(
+    (block) =>
+      block?.active &&
+      Math.hypot(block.x - rawPoint.x, block.y - rawPoint.y) < RAW_POINT_BLOCK_RADIUS,
+  );
+}
+
 function isOffsetOnFacingAxis(offset, direction) {
   return direction.x !== 0 ? offset.y === 0 : offset.x === 0;
 }
 
+function isCandidateInFacingDirection(scene, candidate, direction) {
+  const dx = candidate.x - scene.player.x;
+  const dy = candidate.y - scene.player.y;
+  return direction.x !== 0 ? dx * direction.x > 0 : dy * direction.y > 0;
+}
+
 function snapToNearestUniformSocket(scene, rawPoint, direction) {
+  if (isRawPointBlocked(scene, rawPoint)) return rawPoint;
+
   let bestPoint = null;
   let bestDelta = Number.POSITIVE_INFINITY;
 
@@ -69,10 +75,6 @@ function snapToNearestUniformSocket(scene, rawPoint, direction) {
     if (!block?.active) continue;
 
     for (const offset of BUILD_SOCKET_OFFSETS) {
-      // Never escape around an occupied block by jumping to a perpendicular
-      // socket. Horizontal placement stays on the horizontal axis; vertical
-      // placement stays on the vertical axis. If the intended point is blocked,
-      // the preview remains there and becomes invalid instead of moving aside.
       if (!isOffsetOnFacingAxis(offset, direction)) continue;
 
       const candidate = {
@@ -80,6 +82,7 @@ function snapToNearestUniformSocket(scene, rawPoint, direction) {
         y: block.y + offset.y,
       };
       if (isSocketOccupied(scene, candidate)) continue;
+      if (!isCandidateInFacingDirection(scene, candidate, direction)) continue;
 
       const delta = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
       if (delta <= BUILD_SOCKET_SNAP_MAX && delta < bestDelta) {
@@ -108,18 +111,12 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
   const rawPoint =
     direction.x !== 0
       ? {
-          x:
-            foot.x +
-            direction.x *
-              (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_VISUAL_HALF_WIDTH + PLACEMENT_GAP),
+          x: foot.x + direction.x * FIXED_PLACEMENT_REACH,
           y: foot.y + HORIZONTAL_BLOCK_CENTER_Y_OFFSET,
         }
       : {
           x: foot.x,
-          y:
-            foot.y +
-            direction.y *
-              (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
+          y: foot.y + direction.y * FIXED_PLACEMENT_REACH,
         };
 
   return snapToNearestUniformSocket(this, rawPoint, direction);
