@@ -17,6 +17,7 @@ import "./sandbox/scenes/BuildersValleyMaterialFallbackPatch.js";
 import "./sandbox/scenes/BuildersValleyChainIntentPatch.js";
 import "./sandbox/scenes/BuildersValleyVisualAlignmentPatch.js";
 import "./sandbox/scenes/BuildersValleyPlacementRuntimePatch.js";
+import "./sandbox/scenes/BuildersValleyProductionVisualPatch.js";
 
 try {
   const game = createSandboxGame();
