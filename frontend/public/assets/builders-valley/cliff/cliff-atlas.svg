@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="32" viewBox="0 0 256 32" shape-rendering="crispEdges">
+  <rect width="256" height="32" fill="none"/>
+  <g transform="translate(0 0)">
+    <path d="M2 25V11l5-6h18l5 6v14l-5 5H7z" fill="#384a48"/>
+    <path d="M5 12l5-5h13l4 5-4 5H9z" fill="#68775b"/>
+    <path d="M7 20h18v6H7z" fill="#263b3d"/>
+    <rect x="10" y="9" width="10" height="3" fill="#879267"/>
+  </g>
+  <g transform="translate(32 0)">
+    <path d="M1 26V9l6-6h19l5 6v17l-6 4H7z" fill="#435554"/>
+    <path d="M5 10l5-5h14l4 4-5 6H9z" fill="#748063"/>
+    <path d="M4 18h24v8H4z" fill="#304346"/>
+    <path d="M8 22h16v3H8z" fill="#26383a"/>
+  </g>
+  <g transform="translate(64 0)">
+    <path d="M2 25V13l4-5h20l4 5v12l-5 5H7z" fill="#334746"/>
+    <path d="M5 13l5-4h13l4 4-4 4H9z" fill="#65735b"/>
+    <path d="M7 19h18v8H7z" fill="#273b3d"/>
+    <rect x="11" y="10" width="9" height="3" fill="#89946c"/>
+  </g>
+  <g transform="translate(96 0)">
+    <path d="M1 27V14l6-7h18l6 7v13l-5 3H6z" fill="#3a4d4b"/>
+    <path d="M5 14l5-5h12l5 5-5 5H10z" fill="#728064"/>
+    <path d="M6 21h20v6H6z" fill="#293d3e"/>
+    <rect x="12" y="11" width="8" height="3" fill="#909b72"/>
+  </g>
+  <g transform="translate(128 0)">
+    <path d="M2 24l3-11 8-8h9l8 9-2 10-7 6H9z" fill="#3d504d"/>
+    <path d="M7 14l7-7h7l6 7-5 5H11z" fill="#6f7d62"/>
+    <path d="M8 21h17l-4 6H11z" fill="#293d3d"/>
+  </g>
+  <g transform="translate(160 0)">
+    <path d="M3 25l2-12 7-7h10l7 7v12l-6 5H9z" fill="#415351"/>
+    <path d="M8 13l5-5h8l5 5-5 5H12z" fill="#778365"/>
+    <path d="M9 21h15l-3 6H12z" fill="#2a3e3f"/>
+    <rect x="13" y="10" width="7" height="2" fill="#95a076"/>
+  </g>
+  <g transform="translate(192 0)">
+    <path d="M2 26V15l5-6h18l5 6v11l-5 4H7z" fill="#354846"/>
+    <path d="M6 15l5-4h11l4 4-4 4H10z" fill="#68775b"/>
+    <path d="M7 21h18v6H7z" fill="#263a3b"/>
+    <path d="M10 9h12l-2 3h-8z" fill="#8b976e"/>
+  </g>
+  <g transform="translate(224 0)">
+    <path d="M1 27V12l6-7h18l6 7v15l-5 3H6z" fill="#3b4e4c"/>
+    <path d="M5 12l6-5h11l5 5-5 5H10z" fill="#748164"/>
+    <path d="M6 20h20v7H6z" fill="#293d3e"/>
+    <rect x="11" y="9" width="10" height="3" fill="#929d74"/>
+  </g>
+</svg>
