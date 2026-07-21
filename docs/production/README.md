@@ -1,7 +1,7 @@
 # Math Learning World — Production Authority
 
 **Status:** ACTIVE  
-**Production branch:** `production/builders-valley-vsc-001`  
+**Repository authority branch:** `main`  
 **First production target:** Builders Valley Vertical Slice 001
 
 ## Purpose
@@ -30,6 +30,26 @@ Runtime implementation and evidence
 
 Lower-level artifacts may refine implementation details but must not silently contradict higher-level authority.
 
+## Repository workflow authority
+
+`main` is the sole long-lived development branch and the repository Source of Truth.
+
+Production work should use:
+
+```text
+main
+  ↓
+small, reviewable commit
+  ↓
+repository verification
+  ↓
+local runtime evidence when required
+  ↓
+push and milestone tag
+```
+
+Temporary recovery or integration branches are allowed only when necessary. They must be merged into `main` promptly and deleted after `HEAD` and `origin/main` are verified equal.
+
 ## Active production doctrine
 
 ### Composition first
@@ -52,12 +72,13 @@ A production work package is not complete because code or assets exist. Completi
 
 - `builders-valley/VSC-001-Builders-Valley.md` — vertical-slice contract
 - `builders-valley/PCP-001-Composition-Authority.md` — composition and camera authority
-- Future PES artifacts will define executable environment work packages.
+- `builders-valley/PES-001A-Camera-Composition-Audit.md` — camera/composition repository audit and runtime evidence gate
+- `builders-valley/PES-001B-Terrain-River-Foundation.md` — terrain and river production contract; remains blocked until PES-001A runtime review
 
 ## Immediate production sequence
 
 ```text
-PES-001A  Camera + painted target frame
+PES-001A  Camera + composition blockout and runtime frame approval
 PES-001B  Terrain and river foundation
 PES-001C  Bridge landmark production
 PES-001D  Workshop production cluster
@@ -65,4 +86,4 @@ PES-001E  Vegetation, lighting, atmosphere
 PES-001F  Gameplay integration and polish
 ```
 
-Only `PES-001A` is active at production start. Later packages remain planned until the previous package passes its review gate.
+`PES-001A` remains the active implementation package until its local runtime and Creative Director gates pass. Later packages may be prepared as repository contracts, but their runtime implementation must not start early.
