@@ -10,15 +10,10 @@ const FIXED_PLACEMENT_REACH = TILE_SIZE;
 const HORIZONTAL_BLOCK_CENTER_Y_OFFSET = -BLOCK_VISUAL_HALF_HEIGHT;
 
 const BUILD_BLOCK_PITCH = TILE_SIZE;
-const BUILD_SOCKET_SNAP_MAX = 6;
+const SOCKET_AXIS_TOLERANCE = 10;
+const SOCKET_LANE_TOLERANCE = 6;
 const OCCUPIED_SOCKET_EPSILON = 4;
 const RAW_POINT_BLOCK_RADIUS = TILE_SIZE * 0.7;
-const BUILD_SOCKET_OFFSETS = Object.freeze([
-  { x: BUILD_BLOCK_PITCH, y: 0 },
-  { x: -BUILD_BLOCK_PITCH, y: 0 },
-  { x: 0, y: BUILD_BLOCK_PITCH },
-  { x: 0, y: -BUILD_BLOCK_PITCH },
-]);
 
 const PLACED_BLOCK_FOCUS_SCALE = 0.68;
 const NATURAL_RESOURCE_FOCUS_SCALE = 1;
@@ -55,41 +50,45 @@ function isRawPointBlocked(scene, rawPoint) {
   );
 }
 
-function isOffsetOnFacingAxis(offset, direction) {
-  return direction.x !== 0 ? offset.y === 0 : offset.x === 0;
+function buildForwardSocket(block, direction) {
+  return {
+    x: block.x + direction.x * BUILD_BLOCK_PITCH,
+    y: block.y + direction.y * BUILD_BLOCK_PITCH,
+  };
 }
 
-function isCandidateInFacingDirection(scene, candidate, direction) {
-  const dx = candidate.x - scene.player.x;
-  const dy = candidate.y - scene.player.y;
-  return direction.x !== 0 ? dx * direction.x > 0 : dy * direction.y > 0;
-}
-
-function snapToNearestUniformSocket(scene, rawPoint, direction) {
+function resolveDeterministicFacingSocket(scene, rawPoint, direction) {
+  // An occupied point remains exactly where the player is aiming. It becomes an
+  // invalid placement instead of searching for another socket above, below, or
+  // behind the existing block.
   if (isRawPointBlocked(scene, rawPoint)) return rawPoint;
 
   let bestPoint = null;
-  let bestDelta = Number.POSITIVE_INFINITY;
+  let bestAxisDelta = Number.POSITIVE_INFINITY;
 
   for (const block of scene.placedBlocks ?? []) {
     if (!block?.active) continue;
 
-    for (const offset of BUILD_SOCKET_OFFSETS) {
-      if (!isOffsetOnFacingAxis(offset, direction)) continue;
+    // A block contributes exactly one socket: the socket in the direction the
+    // player is facing. This removes the previous four-way nearest-socket search,
+    // which could make the preview jump between neighboring rows or columns.
+    const candidate = buildForwardSocket(block, direction);
+    if (isSocketOccupied(scene, candidate)) continue;
 
-      const candidate = {
-        x: block.x + offset.x,
-        y: block.y + offset.y,
-      };
-      if (isSocketOccupied(scene, candidate)) continue;
-      if (!isCandidateInFacingDirection(scene, candidate, direction)) continue;
+    const laneDelta =
+      direction.x !== 0
+        ? Math.abs(candidate.y - rawPoint.y)
+        : Math.abs(candidate.x - rawPoint.x);
+    if (laneDelta > SOCKET_LANE_TOLERANCE) continue;
 
-      const delta = Math.hypot(candidate.x - rawPoint.x, candidate.y - rawPoint.y);
-      if (delta <= BUILD_SOCKET_SNAP_MAX && delta < bestDelta) {
-        bestPoint = candidate;
-        bestDelta = delta;
-      }
-    }
+    const axisDelta =
+      direction.x !== 0
+        ? Math.abs(candidate.x - rawPoint.x)
+        : Math.abs(candidate.y - rawPoint.y);
+    if (axisDelta > SOCKET_AXIS_TOLERANCE || axisDelta >= bestAxisDelta) continue;
+
+    bestPoint = candidate;
+    bestAxisDelta = axisDelta;
   }
 
   return bestPoint ?? rawPoint;
@@ -119,7 +118,11 @@ prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
           y: foot.y + direction.y * FIXED_PLACEMENT_REACH,
         };
 
-  return snapToNearestUniformSocket(this, rawPoint, direction);
+  const resolved = resolveDeterministicFacingSocket(this, rawPoint, direction);
+  return {
+    x: Math.round(resolved.x),
+    y: Math.round(resolved.y),
+  };
 };
 
 function calibrateTargetIndicator(scene) {
