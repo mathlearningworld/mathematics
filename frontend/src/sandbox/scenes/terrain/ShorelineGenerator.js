@@ -1,27 +1,40 @@
-function offsetEdge(edge, distance, direction) {
-  return edge.map((point, index) => {
-    const previous = edge[Math.max(0, index - 1)];
-    const next = edge[Math.min(edge.length - 1, index + 1)];
-    const tangentX = next.x - previous.x;
-    const tangentY = next.y - previous.y;
-    const length = Math.max(1, Math.hypot(tangentX, tangentY));
-    const normalX = (-tangentY / length) * direction;
-    const normalY = (tangentX / length) * direction;
-
-    return {
-      x: point.x + normalX * distance,
-      y: point.y + normalY * distance,
-    };
-  });
+function isInsideZone(y, zone) {
+  return y >= zone.y && y <= zone.y + zone.height;
 }
 
-function drawBand(graphics, innerEdge, outerEdge, color, alpha) {
-  graphics.fillStyle(color, alpha);
-  graphics.fillPoints([...innerEdge, ...outerEdge.slice().reverse()], true);
+function createOffsetEdge(edge, side, widthAt) {
+  const direction = side === "left" ? -1 : 1;
+  return edge.map((point, index) => ({
+    x: point.x + direction * widthAt(point, index),
+    y: point.y,
+  }));
 }
 
-function pointAt(edge, index) {
-  return edge[Math.max(0, Math.min(edge.length - 1, index))];
+function bandPolygon(innerEdge, outerEdge) {
+  return [...innerEdge, ...[...outerEdge].reverse()];
+}
+
+function bankWidth(point, index, side, zone) {
+  if (isInsideZone(point.y, zone)) return 8;
+
+  const rhythm = side === "left"
+    ? [20, 28, 16, 36, 12, 25, 18, 32]
+    : [28, 14, 34, 18, 24, 38, 16, 26];
+  const base = rhythm[index % rhythm.length];
+
+  if (point.y < 6 * 32) return base + 12;
+  if (point.y > 23 * 32) return base + 5;
+  return base;
+}
+
+function addShelf(graphics, x, y, side, variant) {
+  const direction = side === "left" ? -1 : 1;
+  graphics.fillStyle(variant ? 0x59665d : 0x4b5b57, 0.98);
+  graphics.fillEllipse(x + direction * 10, y, 30 + variant * 8, 18 + variant * 5);
+  graphics.fillStyle(0x768768, 0.9);
+  graphics.fillEllipse(x + direction * 13, y - 5, 21 + variant * 5, 8);
+  graphics.fillStyle(0x8e9a86, 0.72);
+  graphics.fillCircle(x + direction * 2, y + 7, 4 + variant);
 }
 
 export function createShorelines(scene, geometry, depth = -9) {
@@ -29,48 +42,48 @@ export function createShorelines(scene, geometry, depth = -9) {
   const cliffFaces = scene.add.graphics();
   const wetEdges = scene.add.graphics();
   const grassCaps = scene.add.graphics();
-  const stones = scene.add.graphics();
+  const shelves = scene.add.graphics();
 
-  const leftWetOuter = offsetEdge(geometry.leftEdge, 7, -1);
-  const rightWetOuter = offsetEdge(geometry.rightEdge, 7, 1);
-  const leftRockOuter = offsetEdge(geometry.leftEdge, 27, -1);
-  const rightRockOuter = offsetEdge(geometry.rightEdge, 25, 1);
-  const leftGrassOuter = offsetEdge(geometry.leftEdge, 34, -1);
-  const rightGrassOuter = offsetEdge(geometry.rightEdge, 32, 1);
+  const leftOuter = createOffsetEdge(
+    geometry.leftEdge,
+    "left",
+    (point, index) => bankWidth(point, index, "left", geometry.crossingProtectionZone),
+  );
+  const rightOuter = createOffsetEdge(
+    geometry.rightEdge,
+    "right",
+    (point, index) => bankWidth(point, index, "right", geometry.crossingProtectionZone),
+  );
 
-  drawBand(cliffFaces, leftWetOuter, leftRockOuter, 0x455353, 0.98);
-  drawBand(cliffFaces, rightWetOuter, rightRockOuter, 0x4b5957, 0.98);
-  drawBand(wetEdges, geometry.leftEdge, leftWetOuter, 0x789d94, 0.78);
-  drawBand(wetEdges, geometry.rightEdge, rightWetOuter, 0x73968e, 0.74);
-  drawBand(grassCaps, leftRockOuter, leftGrassOuter, 0x667a5b, 0.94);
-  drawBand(grassCaps, rightRockOuter, rightGrassOuter, 0x70825f, 0.92);
+  cliffFaces.fillStyle(0x43524f, 0.98);
+  cliffFaces.fillPoints(bandPolygon(geometry.leftEdge, leftOuter), true);
+  cliffFaces.fillStyle(0x4a5955, 0.98);
+  cliffFaces.fillPoints(bandPolygon(geometry.rightEdge, rightOuter), true);
 
-  const crossingTop = geometry.crossingProtectionZone.y;
-  const crossingBottom = crossingTop + geometry.crossingProtectionZone.height;
-  const stoneRows = [3, 6, 9, 19, 23, 27, 30];
+  wetEdges.lineStyle(5, 0x7c9e92, 0.72);
+  wetEdges.strokePoints(geometry.leftEdge, false);
+  wetEdges.strokePoints(geometry.rightEdge, false);
 
-  stoneRows.forEach((edgeIndex, index) => {
-    const left = pointAt(leftRockOuter, edgeIndex);
-    const right = pointAt(rightRockOuter, edgeIndex + (index % 2));
-    const inCrossing = left.y >= crossingTop && left.y <= crossingBottom;
-    if (inCrossing) return;
+  grassCaps.lineStyle(6, 0x70855f, 0.84);
+  grassCaps.strokePoints(leftOuter, false);
+  grassCaps.strokePoints(rightOuter, false);
 
-    stones.fillStyle(index % 2 === 0 ? 0x7f8c86 : 0x687572, 0.96);
-    stones.fillEllipse(left.x - 3, left.y + 4, 13 + (index % 3) * 3, 9 + (index % 2) * 3);
-    if (index % 3 !== 1) {
-      stones.fillEllipse(right.x + 3, right.y - 5, 11 + ((index + 1) % 3) * 3, 8 + (index % 2) * 2);
-    }
+  const shelfSpecs = [
+    { index: 4, side: "left", variant: 1 },
+    { index: 7, side: "right", variant: 0 },
+    { index: 10, side: "left", variant: 0 },
+    { index: 19, side: "right", variant: 1 },
+    { index: 23, side: "left", variant: 1 },
+    { index: 27, side: "right", variant: 0 },
+  ];
+
+  shelfSpecs.forEach(({ index, side, variant }) => {
+    const edge = side === "left" ? geometry.leftEdge : geometry.rightEdge;
+    const point = edge[Math.min(index, edge.length - 1)];
+    if (!point || isInsideZone(point.y, geometry.crossingProtectionZone)) return;
+    addShelf(shelves, point.x, point.y, side, variant);
   });
 
-  const ledgeRows = [5, 20, 28];
-  ledgeRows.forEach((edgeIndex, index) => {
-    const left = pointAt(leftGrassOuter, edgeIndex);
-    const right = pointAt(rightGrassOuter, edgeIndex + 1);
-    grassCaps.fillStyle(index % 2 === 0 ? 0x7d915f : 0x72865a, 0.96);
-    grassCaps.fillEllipse(left.x - 8, left.y, 32, 17);
-    grassCaps.fillEllipse(right.x + 8, right.y + 5, 28, 15);
-  });
-
-  container.add([cliffFaces, wetEdges, grassCaps, stones]);
+  container.add([cliffFaces, wetEdges, grassCaps, shelves]);
   return container;
 }
