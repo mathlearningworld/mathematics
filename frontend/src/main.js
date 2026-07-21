@@ -6,6 +6,7 @@
 import { createSandboxGame } from "./sandbox/createSandboxGame.js";
 import "./sandbox/scenes/BuildersValleyFeedbackPatch.js";
 import "./sandbox/scenes/BuildersValleyDirectionPatch.js";
+import "./sandbox/scenes/BuildersValleyMissionPatch.js";
 
 try {
   const game = createSandboxGame();
