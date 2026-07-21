@@ -9,7 +9,7 @@ import { createWaterRenderer } from "./terrain/WaterRenderer.js";
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V1";
+const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V2";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
@@ -24,6 +24,12 @@ function retireSupersededBlockout(scene) {
   heroSlice?.cliffBanks?.setVisible(false);
 }
 
+function cloneAnchors(anchors) {
+  return Object.fromEntries(
+    Object.entries(anchors).map(([name, point]) => [name, { ...point }]),
+  );
+}
+
 function installTerrainRiverFoundation(scene) {
   const geometry = createRiverGeometry();
   const paths = createTerrainPaths(scene);
@@ -32,7 +38,8 @@ function installTerrainRiverFoundation(scene) {
 
   const runtime = {
     standard: STANDARD,
-    status: "IMPLEMENTATION_STARTED",
+    status: "ENVIRONMENT_PRODUCTION_STARTED",
+    phase: "PES-001B_PHASE_2",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
@@ -41,6 +48,13 @@ function installTerrainRiverFoundation(scene) {
     paths: paths.container,
     pathAnchors: paths.anchors,
     modules: MODULES,
+    visualTargets: Object.freeze([
+      "variable river width",
+      "asymmetric cliff framing",
+      "protected bridge clearing",
+      "waterfall-to-river continuity",
+      "spawn-to-bridge-to-workshop guidance",
+    ]),
     gameplayGeometryChanged: false,
   };
 
@@ -50,6 +64,7 @@ function installTerrainRiverFoundation(scene) {
   window.__BUILDERS_VALLEY__.getTerrainRiverFoundation = () => ({
     standard: runtime.standard,
     packageStatus: runtime.status,
+    productionPhase: runtime.phase,
     implementationOwner: runtime.owner,
     referenceViewport: {
       width: VIEWPORT_WIDTH,
@@ -61,14 +76,11 @@ function installTerrainRiverFoundation(scene) {
       width: geometry.corridor.width,
       height: geometry.corridor.height,
       segmentCount: geometry.segments.length,
+      profilePointCount: geometry.profile.length,
     },
     crossingProtectionZone: { ...geometry.crossingProtectionZone },
-    pathAnchors: {
-      leftStart: { ...runtime.pathAnchors.leftStart },
-      leftEnd: { ...runtime.pathAnchors.leftEnd },
-      rightStart: { ...runtime.pathAnchors.rightStart },
-      rightEnd: { ...runtime.pathAnchors.rightEnd },
-    },
+    pathAnchors: cloneAnchors(runtime.pathAnchors),
+    visualTargets: [...runtime.visualTargets],
     modules: [...runtime.modules],
     supersededBlockoutHidden: true,
     gameplayGeometryChanged: false,
