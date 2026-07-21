@@ -1,241 +1,133 @@
 # PES-001B — Terrain and River Foundation
 
-**Status:** CONTRACT READY — IMPLEMENTATION BLOCKED  
+**Status:** FOUNDATION APPROVED — PRODUCTION ASSETS DEFERRED  
 **Authority:** PCP-001 / VSC-001 / PES-001A  
-**Activation gate:** PES-001A local runtime, interaction, and Creative Director frame approval  
-**Repository branch:** `main`
+**Repository branch:** `main`  
+**Runtime evidence:** Vite boot, repeated in-engine screenshots, gameplay preservation review  
+**Successor:** PES-001C — Production Asset Pipeline and Integration
 
 ## 1. Purpose
 
-PES-001B converts the current straight prototype water corridor and repeated cliff-bank blockout into an authored terrain-and-river foundation that supports the Builders Valley hero frame.
+PES-001B establishes the authored terrain-and-river foundation for the Builders Valley hero frame while preserving the gather → carry → place gameplay contract.
 
-The package must improve spatial composition and environmental readability without changing the gather → carry → place gameplay contract.
+The package evolved from a straight prototype water corridor into a presentation-owned environment foundation with continuous river geometry, authored gorge composition, protected bridge approaches, workshop terrain integration, and left-side composition rhythm.
 
-## 2. Current repository baseline
+## 2. Approved foundation outcome
 
-The existing hero slice currently owns:
+The accepted foundation provides:
 
-- a full-height river base inside the fixed `STREAM` corridor;
-- repeated horizontal current marks;
-- a waterfall and gorge at the upper world edge;
-- cliff-bank rock faces repeated at fixed vertical intervals;
-- a visual bridge and workshop layered above the terrain;
-- presentation-only composition offsets applied by `BuildersValleyCompositionPatch.js`.
+- a continuous river silhouette with centerline drift and controlled width rhythm;
+- shared-edge water and shoreline rendering without visible segment seams;
+- waterfall-to-river gorge composition;
+- non-repeating shoreline recess and shelf grammar;
+- rock masses integrated with the shoreline;
+- protected bridge clearing and readable crossing approaches;
+- workshop terrace and work-yard support;
+- authored forest-pocket composition;
+- controlled foreground framing;
+- runtime inspection evidence;
+- unchanged gameplay geometry and collision authority.
 
-Current implementation paths:
+## 3. Runtime ownership
 
-| Concern | Repository owner |
-|---|---|
-| World, tile, viewport and stream dimensions | `frontend/src/sandbox/config/worldContract.js` |
-| Base world terrain and gameplay geometry | `frontend/src/sandbox/scenes/BuildersValleyScene.js` and `frontend/src/sandbox/art/pixelArtFactory.js` |
-| River, waterfall and cliff-bank visual blockout | `frontend/src/sandbox/scenes/BuildersValleyHeroSlicePatch.js` |
-| Camera and landmark composition | `frontend/src/sandbox/scenes/BuildersValleyCompositionPatch.js` |
-
-## 3. Scope
-
-PES-001B includes:
-
-1. authored river silhouette inside the existing gameplay corridor;
-2. readable shoreline transitions rather than one uninterrupted rectangle;
-3. non-repeating left and right bank masses;
-4. waterfall-to-river continuity;
-5. terrain paths that visually connect the player plane, crossing and workshop;
-6. controlled river-current rhythm that follows the water direction;
-7. bank shadows, shallow-water accents and terrain-contact treatment;
-8. repository inspection metadata for runtime evidence.
-
-## 4. Explicit non-goals
-
-PES-001B must not:
-
-- move the player spawn;
-- change world bounds;
-- alter stream collision or crossing rules;
-- move resource nodes;
-- change pickup, carry, placement or hotbar behavior;
-- add final bridge interaction states;
-- add final workshop assets;
-- introduce final lighting or atmospheric grading;
-- expand the world beyond the Builders Valley vertical slice.
-
-Any required gameplay-geometry change must stop this package and be proposed as a separate contract amendment.
-
-## 5. Terrain grammar
-
-### 5.1 Primary terrain planes
-
-The environment must read as three connected planes:
-
-- **Left gameplay plane:** player spawn, gathering and approach space;
-- **River incision:** the strong vertical separator and leading line;
-- **Right destination plane:** bridge exit, workshop approach and future expansion cue.
-
-The river may bend visually, but these planes must remain readable at the reference viewport.
-
-### 5.2 Shoreline rhythm
-
-Each bank should use a controlled sequence of:
-
-```text
-broad mass
-→ short recess
-→ directional projection
-→ calm transition near crossing
-→ renewed mass
-```
-
-Left and right banks must not mirror one another. Repetition at a constant interval is prohibited in the approved frame.
-
-### 5.3 Crossing protection zone
-
-A protected composition zone must remain around the bridge anchor:
-
-- no tall cliff mass blocking the deck silhouette;
-- no high-frequency shoreline noise at the bridge ends;
-- terrain paths must widen as they approach the crossing;
-- contact shadows may strengthen the bridge foundation but must not obscure player readability.
-
-## 6. River grammar
-
-### 6.1 Water hierarchy
-
-The river requires four visual layers:
-
-1. deep-water base;
-2. directional mid-current bands;
-3. shallow bank transitions;
-4. sparse foam or turbulence accents.
-
-The layers must communicate downstream movement from waterfall to lower world without covering the scene in repeated stripes.
-
-### 6.2 Waterfall continuity
-
-The waterfall must visibly feed the same river system. The gorge, spray, turbulence and downstream currents should form one continuous visual sentence rather than separate decorative objects.
-
-### 6.3 Current density
-
-Current marks should be concentrated where water speed or obstruction implies movement. Calm sections need negative space. A uniform row pattern across the whole river is not acceptable for the production target.
-
-## 7. Path and destination readability
-
-Two terrain paths are required:
-
-- player/gathering area → bridge approach;
-- bridge exit → workshop cluster.
-
-Paths are visual guidance, not hard rails. They should be expressed through terrain value, wear, edge vegetation and prop spacing while preserving free movement.
-
-At the reference viewport, the player should be able to infer:
-
-```text
-I am here
-→ resources are accessible here
-→ the river divides the space
-→ the bridge is the crossing
-→ the workshop is the destination
-```
-
-## 8. Layer and ownership contract
-
-PES-001B should introduce a terrain-and-river owner rather than continuing to enlarge a general hero-slice patch indefinitely.
-
-Preferred ownership:
+Primary owner:
 
 ```text
 frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js
 ```
 
-This module should own only:
-
-- authored terrain support overlays;
-- shoreline silhouettes;
-- river visual layers;
-- waterfall-to-river continuity treatment;
-- terrain-path presentation;
-- inspection metadata for this package.
-
-`BuildersValleyHeroSlicePatch.js` remains the owner of the current bridge, workshop and framing-vegetation blockout until their dedicated packages replace them.
-
-## 9. Runtime inspection contract
-
-The implementation should expose a read-only inspection function under the existing Builders Valley runtime namespace:
+Internal environment modules:
 
 ```text
-window.__BUILDERS_VALLEY__.getTerrainRiverFoundation()
+frontend/src/sandbox/scenes/terrain/
+├── RiverGeometry.js
+├── WaterRenderer.js
+├── ShorelineGenerator.js
+├── TerrainMassGenerator.js
+├── TerrainPathGenerator.js
+├── GorgeComposer.js
+├── WorkshopTerraceComposer.js
+├── BridgeApproachComposer.js
+├── ForestPocketComposer.js
+└── ForegroundFramingComposer.js
 ```
 
-Expected evidence fields:
+These modules own presentation only. `BuildersValleyScene.js` and `worldContract.js` remain gameplay and geometry authority.
 
-- standard identifier;
-- package status;
-- reference viewport;
-- river corridor bounds;
-- crossing protection zone;
-- path anchors;
-- gameplay geometry changed flag;
-- implementation owner.
+## 4. Preserved invariants
 
-The inspection API is evidence support only and must not become gameplay authority.
+PES-001B did not change:
 
-## 10. Acceptance gates
+- player spawn;
+- world bounds;
+- stream collision contract;
+- crossing rules;
+- resource-node positions;
+- pickup range;
+- carry intent;
+- placement authority;
+- placed-object coordinates;
+- hotbar behavior;
+- gather → carry → place flow.
 
-### Repository gate
-
-- dedicated module ownership is clear;
-- imports and patch load order are explicit;
-- no gameplay contract files change without approval;
-- repository diff contains only PES-001B scope;
-- inspection metadata is available;
-- documentation and implementation agree.
-
-### Runtime gate
-
-- application starts without console errors;
-- river and terrain render correctly at 960 × 540;
-- no visible seams or invalid depth ordering;
-- pointer targeting and placement preview remain aligned;
-- player can traverse all previously valid ground;
-- frame rate and animation behavior remain acceptable.
-
-### Composition gate
-
-- river creates a clear leading line;
-- waterfall, bridge and workshop remain readable together;
-- banks no longer appear mechanically repeated;
-- crossing space is visually protected;
-- left and right terrain planes remain distinct.
-
-### Gameplay gate
-
-- gather → carry → place loop remains intact;
-- resource nodes remain reachable;
-- no new collision trap or false affordance is introduced;
-- paths guide but do not constrain player agency.
-
-### Creative Director gate
-
-Required evidence:
-
-- initial reference frame screenshot;
-- bridge approach screenshot;
-- workshop approach screenshot;
-- before/after terrain comparison;
-- concise notes for any intentional deviation from PCP-001.
-
-## 11. Completion rule
-
-PES-001B is complete only when:
+Runtime evidence continues to report:
 
 ```text
-Repository PASS
-+ Runtime PASS
-+ Composition PASS
-+ Gameplay PASS
-+ Creative Director approval
+gameplayGeometryChanged: false
+collisionAuthority: UNCHANGED_STREAM_CONTRACT
 ```
 
-A committed visual patch without local runtime evidence remains `IMPLEMENTATION STARTED`, not complete.
+## 5. Review result
 
-## 12. Next package boundary
+| Gate | Result |
+|---|---|
+| Repository architecture | PASS |
+| Runtime boot and module loading | PASS |
+| Continuous river rendering | PASS |
+| Shoreline continuity | PASS |
+| Authored environment zones | PASS |
+| Bridge and workshop readability | PASS — foundation level |
+| Gameplay preservation | PASS based on human runtime evidence |
+| Production sprite/tile quality | DEFERRED TO PES-001C+ |
 
-After PES-001B approval, PES-001C may replace the bridge blockout with a modular production asset and explicit reconstruction-state readability. PES-001B must leave stable bank integration anchors for that work.
+## 6. Approval meaning
+
+`FOUNDATION APPROVED` does not claim that procedural Phaser Graphics are final production artwork.
+
+It means:
+
+```text
+Composition and geometry foundation approved
++ Runtime integration approved
++ Gameplay preservation approved
++ Asset replacement anchors ready
+```
+
+The remaining visual gap to the painted target frame is primarily an asset-production and material-authoring gap, not a terrain-layout gap.
+
+## 7. Deferred asset work
+
+The following are explicitly routed to the production asset pipeline:
+
+- cliff faces, caps, cracks and moss sprites;
+- shoreline blend tiles;
+- water foam, ripple and highlight textures;
+- bridge modular asset kit;
+- workshop yard, paver, retaining-edge and prop assets;
+- vegetation clusters and foreground occlusion sprites;
+- atlas-backed animated water details;
+- final lighting and atmospheric grading.
+
+Existing Graphics-based composition remains the safe fallback until production assets are registered and verified.
+
+## 8. Completion record
+
+PES-001B is closed as:
+
+```text
+FOUNDATION APPROVED
+PRODUCTION ART NOT YET COMPLETE
+READY FOR ASSET PIPELINE INTEGRATION
+```
+
+No later package may silently change the approved terrain composition or gameplay corridor. Asset integration must project onto the approved anchors or introduce an explicit contract amendment.
