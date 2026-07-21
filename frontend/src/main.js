@@ -11,6 +11,7 @@ import "./sandbox/scenes/BuildersValleyPlacementPriorityPatch.js";
 import "./sandbox/scenes/BuildersValleyInteractionGeometryPatch.js";
 import "./sandbox/scenes/BuildersValleyAdjacentPickupPatch.js";
 import "./sandbox/scenes/BuildersValleyOccupiedPlacementPickupPatch.js";
+import "./sandbox/scenes/BuildersValleyPickupFocusStabilityPatch.js";
 
 try {
   const game = createSandboxGame();
