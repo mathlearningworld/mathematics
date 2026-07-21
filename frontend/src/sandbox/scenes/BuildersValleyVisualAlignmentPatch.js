@@ -1,12 +1,18 @@
-import { TILE_SIZE } from "../config/worldContract.js";
 import { BuildersValleyScene } from "./BuildersValleyScene.js";
 
 const prototype = BuildersValleyScene.prototype;
-const originalGetFrontPlacementPoint = prototype._getFrontPlacementPoint;
 const originalUpdate = prototype.update;
 
-const AXIS_SNAP_MAX = 12;
-const NEIGHBOR_FORWARD_MAX = TILE_SIZE * 1.35;
+// The player container's world point is close to the ground anchor, but it is
+// not itself a complete interaction footprint. Keep one authoritative visual
+// foot reference and derive every front placement direction from it.
+const PLAYER_VISUAL_FOOT_Y_OFFSET = 1;
+const PLAYER_FOOTPRINT_HALF_WIDTH = 13;
+const PLAYER_FOOTPRINT_HALF_HEIGHT = 5;
+const BLOCK_VISUAL_HALF_WIDTH = 14;
+const BLOCK_VISUAL_HALF_HEIGHT = 13;
+const PLACEMENT_GAP = 1;
+
 const PLACED_BLOCK_FOCUS_SCALE = 0.68;
 const NATURAL_RESOURCE_FOCUS_SCALE = 1;
 const NATURAL_RESOURCE_FOCUS_Y_OFFSET = -12;
@@ -25,44 +31,37 @@ function getCardinalDirection(scene) {
   return { x: 0, y: direction.y >= 0 ? 1 : -1 };
 }
 
-function alignPlacementAxis(scene, point) {
-  if (!point || !scene.player) return point;
+prototype._getPlayerFootPoint = function getPlayerVisualFootPoint() {
+  if (!this.player) return null;
+  return {
+    x: this.player.x,
+    y: this.player.y + PLAYER_VISUAL_FOOT_Y_OFFSET,
+  };
+};
 
-  const direction = getCardinalDirection(scene);
-  let best = null;
-  let bestAxisDelta = Number.POSITIVE_INFINITY;
-  let bestForwardDelta = Number.POSITIVE_INFINITY;
+prototype._getFrontPlacementPoint = function getFrontPointFromVisualFoot() {
+  const foot = this._getPlayerFootPoint?.();
+  if (!foot) return null;
 
-  for (const block of scene.placedBlocks ?? []) {
-    if (!block?.active) continue;
-
-    const forwardDelta =
-      direction.x !== 0
-        ? Math.abs(block.x - point.x)
-        : Math.abs(block.y - point.y);
-    const axisDelta =
-      direction.x !== 0
-        ? Math.abs(block.y - point.y)
-        : Math.abs(block.x - point.x);
-
-    if (forwardDelta > NEIGHBOR_FORWARD_MAX || axisDelta > AXIS_SNAP_MAX) continue;
-
-    if (
-      axisDelta < bestAxisDelta ||
-      (axisDelta === bestAxisDelta && forwardDelta < bestForwardDelta)
-    ) {
-      best = block;
-      bestAxisDelta = axisDelta;
-      bestForwardDelta = forwardDelta;
-    }
+  const direction = getCardinalDirection(this);
+  if (direction.x !== 0) {
+    return {
+      x:
+        foot.x +
+        direction.x *
+          (PLAYER_FOOTPRINT_HALF_WIDTH + BLOCK_VISUAL_HALF_WIDTH + PLACEMENT_GAP),
+      y: foot.y,
+    };
   }
 
-  if (!best) return point;
-
-  return direction.x !== 0
-    ? { x: point.x, y: best.y }
-    : { x: best.x, y: point.y };
-}
+  return {
+    x: foot.x,
+    y:
+      foot.y +
+      direction.y *
+        (PLAYER_FOOTPRINT_HALF_HEIGHT + BLOCK_VISUAL_HALF_HEIGHT + PLACEMENT_GAP),
+  };
+};
 
 function calibrateTargetIndicator(scene) {
   const target = scene.targetResource?.active ? scene.targetResource : null;
@@ -80,11 +79,6 @@ function calibrateTargetIndicator(scene) {
     .setScale(NATURAL_RESOURCE_FOCUS_SCALE)
     .setPosition(Math.round(target.x), Math.round(target.y + NATURAL_RESOURCE_FOCUS_Y_OFFSET));
 }
-
-prototype._getFrontPlacementPoint = function getVisuallyAlignedFrontPlacementPoint() {
-  const point = originalGetFrontPlacementPoint?.call(this) ?? null;
-  return alignPlacementAxis(this, point);
-};
 
 prototype.update = function updateWithVisualInteractionAlignment(time, delta) {
   originalUpdate.call(this, time, delta);
