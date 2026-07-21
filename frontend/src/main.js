@@ -22,6 +22,7 @@ import "./sandbox/scenes/BuildersValleyHeroSlicePatch.js";
 import "./sandbox/scenes/BuildersValleyCompositionPatch.js";
 import "./sandbox/scenes/BuildersValleyTerrainRiverPatch.js";
 import "./sandbox/scenes/BuildersValleyAssetPipelinePatch.js";
+import "./sandbox/scenes/BuildersValleyGroundAssetPatch.js";
 
 try {
   const game = createSandboxGame();
