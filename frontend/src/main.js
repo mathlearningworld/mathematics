@@ -23,6 +23,7 @@ import "./sandbox/scenes/BuildersValleyCompositionPatch.js";
 import "./sandbox/scenes/BuildersValleyTerrainRiverPatch.js";
 import "./sandbox/scenes/BuildersValleyAssetPipelinePatch.js";
 import "./sandbox/scenes/BuildersValleyGroundAssetPatch.js";
+import "./sandbox/scenes/BuildersValleyWaterAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
 try {
