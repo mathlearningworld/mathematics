@@ -24,6 +24,7 @@ import "./sandbox/scenes/BuildersValleyTerrainRiverPatch.js";
 import "./sandbox/scenes/BuildersValleyAssetPipelinePatch.js";
 import "./sandbox/scenes/BuildersValleyGroundAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyWaterAssetPatch.js";
+import "./sandbox/scenes/BuildersValleyCliffAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyRiverKitRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
