@@ -5,7 +5,7 @@ const prototype = BuildersValleyScene.prototype;
 const originalUpdateTargetResource = prototype._updateTargetResource;
 const originalGetFrontPlacementPoint = prototype._getFrontPlacementPoint;
 
-// Place exactly one tile in front of the player.
+// Place in the immediately adjacent tile measured from the player's collision edge.
 const PLACEMENT_TILE_DISTANCE = 1;
 // Pickup begins only when player and block collision bounds are genuinely adjacent.
 const PICKUP_BODY_GAP_MAX = 4;
@@ -189,13 +189,30 @@ function restoreBuildMaterial(scene, resourceType) {
   }
 }
 
-prototype._getFrontPlacementPoint = function getOneTileFrontPlacementPoint() {
+prototype._getFrontPlacementPoint = function getAdjacentFrontPlacementPoint() {
   if (!this.player) return originalGetFrontPlacementPoint?.call(this) ?? null;
 
   const direction = getInteractionDirection(this);
+  const bounds = getBounds(this.player);
+  const blockHalfWidth = 14;
+  const blockHalfHeight = 11;
+
+  if (Math.abs(direction.x) >= Math.abs(direction.y)) {
+    return {
+      x:
+        direction.x < 0
+          ? bounds.left - blockHalfWidth * PLACEMENT_TILE_DISTANCE
+          : bounds.right + blockHalfWidth * PLACEMENT_TILE_DISTANCE,
+      y: (bounds.top + bounds.bottom) / 2,
+    };
+  }
+
   return {
-    x: this.player.x + direction.x * TILE_SIZE * PLACEMENT_TILE_DISTANCE,
-    y: this.player.y + direction.y * TILE_SIZE * PLACEMENT_TILE_DISTANCE,
+    x: (bounds.left + bounds.right) / 2,
+    y:
+      direction.y < 0
+        ? bounds.top - blockHalfHeight * PLACEMENT_TILE_DISTANCE
+        : bounds.bottom + blockHalfHeight * PLACEMENT_TILE_DISTANCE,
   };
 };
 
