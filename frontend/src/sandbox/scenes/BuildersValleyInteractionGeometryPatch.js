@@ -5,7 +5,6 @@ const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 const originalUpdate = prototype.update;
 
-const PLACEMENT_TILE_DISTANCE = 1;
 const MAX_PLACEMENT_DISTANCE = TILE_SIZE * 1.5;
 const OCCUPANCY_DISTANCE = TILE_SIZE * 0.7;
 
@@ -102,14 +101,13 @@ function buildUnifiedPrediction(scene) {
     };
   }
 
-  // Anchor placement to the player's current tile, then move exactly one tile
-  // in the facing direction. This prevents downward placement from jumping
-  // between one and two tiles as the player moves inside the same tile.
+  // Use the exact placement authority point supplied by the interaction runtime,
+  // then apply the same tile snap used by actual placement. Ghost and placed block
+  // therefore cannot disagree or drift to a second tile in the downward direction.
   const direction = cardinalDirection(scene);
-  const playerTileX = snapToTile(scene.player.x);
-  const playerTileY = snapToTile(scene.player.y);
-  const tileX = playerTileX + direction.x * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
-  const tileY = playerTileY + direction.y * TILE_SIZE * PLACEMENT_TILE_DISTANCE;
+  const placementPoint = scene._getFrontPlacementPoint?.();
+  const tileX = snapToTile(placementPoint?.x ?? scene.player.x + direction.x * TILE_SIZE);
+  const tileY = snapToTile(placementPoint?.y ?? scene.player.y + direction.y * TILE_SIZE);
 
   const occupied = [...(scene.resourceNodes ?? []), ...(scene.placedBlocks ?? [])].some(
     (object) =>
@@ -120,7 +118,7 @@ function buildUnifiedPrediction(scene) {
     tileX <= STREAM.left + STREAM.width &&
     tileY >= STREAM.top &&
     tileY <= STREAM.top + STREAM.height;
-  const distance = Math.hypot(tileX - playerTileX, tileY - playerTileY);
+  const distance = Math.hypot(tileX - scene.player.x, tileY - scene.player.y);
   const outOfRange = distance > MAX_PLACEMENT_DISTANCE;
   const valid = !occupied && !insideStream && !outOfRange;
 
