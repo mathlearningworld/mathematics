@@ -9,6 +9,7 @@ import "./sandbox/scenes/BuildersValleyDirectionPatch.js";
 import "./sandbox/scenes/BuildersValleyMissionPatch.js";
 import "./sandbox/scenes/BuildersValleyPlacementPriorityPatch.js";
 import "./sandbox/scenes/BuildersValleyInteractionGeometryPatch.js";
+import "./sandbox/scenes/BuildersValleyAdjacentPickupPatch.js";
 
 try {
   const game = createSandboxGame();
