@@ -5,7 +5,10 @@ const originalCreate = prototype.create;
 const originalSelectHotbarSlot = prototype._selectHotbarSlot;
 const originalTryCollectResource = prototype._tryCollectResource;
 const originalTryPlaceSelectedBlock = prototype._tryPlaceSelectedBlock;
-const originalUpdateTargetResource = prototype._updateTargetResource;
+
+const TARGET_MAX_DISTANCE = 90;
+const TARGET_CONFIRM_DELAY_MS = 180;
+const TARGET_RELEASE_DELAY_MS = 120;
 
 function findMaterialSlot(scene, preferredResourceType = null) {
   if (!Array.isArray(scene.hotbarSlots)) return -1;
@@ -22,9 +25,36 @@ function findMaterialSlot(scene, preferredResourceType = null) {
   );
 }
 
+function findToolSlot(scene, toolId) {
+  if (!toolId || !Array.isArray(scene.hotbarSlots)) return -1;
+  return scene.hotbarSlots.findIndex(({ item }) => item?.id === toolId);
+}
+
 function snapshotIntent(scene) {
   const intent = scene.__gameplayIntent;
   return intent ? { ...intent } : null;
+}
+
+function snapshotTargetDecision(scene) {
+  const decision = scene.__targetDecision;
+  if (!decision) return null;
+
+  return {
+    confirmedTarget: describeTarget(decision.confirmedTarget),
+    candidateTarget: describeTarget(decision.candidateTarget),
+    candidateSince: decision.candidateSince,
+    lastScores: decision.lastScores.map((entry) => ({ ...entry })),
+  };
+}
+
+function describeTarget(target) {
+  if (!target?.active) return null;
+  return {
+    resourceType: target.getData?.("resourceType") ?? null,
+    assetId: target.getData?.("assetId") ?? null,
+    x: Math.round(target.x),
+    y: Math.round(target.y),
+  };
 }
 
 function setBuildIntent(scene, resourceType, source) {
@@ -65,17 +95,122 @@ function autoSelect(scene, index) {
   }
 }
 
+function getIntendedMaterial(scene) {
+  return scene.__gameplayIntent?.kind === "BUILD_WITH_MATERIAL"
+    ? scene.__gameplayIntent.resourceType
+    : scene.__placementIntentMaterial;
+}
+
+function scoreTarget(scene, target) {
+  const dx = target.x - scene.player.x;
+  const dy = target.y - scene.player.y;
+  const distance = Math.hypot(dx, dy);
+  if (distance > TARGET_MAX_DISTANCE) return null;
+
+  const directionLength = Math.hypot(dx, dy) || 1;
+  const targetDirectionX = dx / directionLength;
+  const targetDirectionY = dy / directionLength;
+  const interactionDirection = scene.lastInteractionDirection ?? { x: 1, y: 0 };
+  const facingDot =
+    targetDirectionX * interactionDirection.x + targetDirectionY * interactionDirection.y;
+
+  const resourceType = target.getData?.("resourceType") ?? null;
+  const assetId = target.getData?.("assetId") ?? "";
+  const intendedMaterial = getIntendedMaterial(scene);
+
+  const distanceScore = (1 - distance / TARGET_MAX_DISTANCE) * 60;
+  const facingScore = Math.max(-1, Math.min(1, facingDot)) * 20;
+  const intentScore = intendedMaterial && resourceType === intendedMaterial ? 28 : 0;
+  const continuityScore = target === scene.targetResource ? 8 : 0;
+  const placedObjectPenalty = assetId.startsWith("BV_BLOCK_") ? -8 : 0;
+  const justPlacedPenalty = target === scene.__lastPlacedIntentTarget ? -120 : 0;
+
+  return {
+    target,
+    score:
+      distanceScore +
+      facingScore +
+      intentScore +
+      continuityScore +
+      placedObjectPenalty +
+      justPlacedPenalty,
+    distance,
+    resourceType,
+    components: {
+      distance: distanceScore,
+      facing: facingScore,
+      intent: intentScore,
+      continuity: continuityScore,
+      objectPriority: placedObjectPenalty,
+      justPlaced: justPlacedPenalty,
+    },
+  };
+}
+
+function chooseBestTarget(scene) {
+  const scored = scene.resourceNodes
+    .filter((node) => node?.active)
+    .map((node) => scoreTarget(scene, node))
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.distance - b.distance);
+
+  scene.__targetDecision.lastScores = scored.map(({ target, ...entry }) => ({
+    ...entry,
+    target: describeTarget(target),
+  }));
+
+  return scored[0]?.target ?? null;
+}
+
+function restoreIntentSelection(scene) {
+  scene.__lastPlacedIntentTarget = null;
+  autoSelect(scene, findMaterialSlot(scene, getIntendedMaterial(scene)));
+}
+
+function confirmTarget(scene, target) {
+  const previousTarget = scene.targetResource;
+  scene.targetResource = target;
+  scene.__targetDecision.confirmedTarget = target;
+  scene.__targetDecision.candidateTarget = null;
+  scene.__targetDecision.candidateSince = 0;
+
+  scene.targetIndicator
+    .setVisible(Boolean(target))
+    .setPosition(target?.x ?? 0, (target?.y ?? 0) - 12);
+
+  if (target) {
+    const toolSlot = findToolSlot(scene, target.getData?.("requiredTool"));
+    autoSelect(scene, toolSlot);
+  } else {
+    restoreIntentSelection(scene);
+  }
+
+  if (previousTarget !== target) {
+    scene._recordEvent?.("target_confirmed", {
+      previous: describeTarget(previousTarget),
+      current: describeTarget(target),
+    });
+  }
+}
+
 prototype.create = function createWithIntentRuntime() {
   originalCreate.call(this);
 
   this.__gameplayIntent = null;
   this.__placementIntentMaterial = null;
   this.__lastPlacedIntentTarget = null;
+  this.__targetDecision = {
+    confirmedTarget: null,
+    candidateTarget: null,
+    candidateSince: 0,
+    lastScores: [],
+  };
 
   if (window.__BUILDERS_VALLEY__) {
     window.__BUILDERS_VALLEY__.getGameplayIntent = () => snapshotIntent(this);
     window.__BUILDERS_VALLEY__.cancelGameplayIntent = () =>
       cancelGameplayIntent(this, "DEBUG_CANCEL");
+    window.__BUILDERS_VALLEY__.getTargetDecision = () => snapshotTargetDecision(this);
   }
 };
 
@@ -166,36 +301,36 @@ prototype._tryPlaceSelectedBlock = function placeBlockWithIntent(worldX, worldY)
   this.__placementIntentMaterial = resourceType;
 };
 
-prototype._updateTargetResource = function updateTargetWithIntent() {
-  const previousTarget = this.targetResource;
+prototype._updateTargetResource = function updateTargetWithScoringAndQueue() {
+  if (!this.__targetDecision || !this.player || !this.targetIndicator) return;
 
-  this.__intentContextUpdating = true;
-  try {
-    originalUpdateTargetResource.call(this);
-  } finally {
-    this.__intentContextUpdating = false;
-  }
+  const now = this.time?.now ?? performance.now();
+  const desiredTarget = chooseBestTarget(this);
+  const currentTarget = this.targetResource?.active ? this.targetResource : null;
 
-  const currentTarget = this.targetResource;
-  const targetChanged = currentTarget !== previousTarget;
-  if (!targetChanged) return;
-
-  const intendedMaterial =
-    this.__gameplayIntent?.kind === "BUILD_WITH_MATERIAL"
-      ? this.__gameplayIntent.resourceType
-      : this.__placementIntentMaterial;
-  const materialSlot = findMaterialSlot(this, intendedMaterial);
-
-  if (!currentTarget) {
-    this.__lastPlacedIntentTarget = null;
-    autoSelect(this, materialSlot);
+  if (desiredTarget === currentTarget) {
+    this.__targetDecision.confirmedTarget = currentTarget;
+    this.__targetDecision.candidateTarget = null;
+    this.__targetDecision.candidateSince = 0;
+    this.targetIndicator
+      .setVisible(Boolean(currentTarget))
+      .setPosition(currentTarget?.x ?? 0, (currentTarget?.y ?? 0) - 12);
     return;
   }
 
-  const isJustPlacedIntentTarget = currentTarget === this.__lastPlacedIntentTarget;
-  if (isJustPlacedIntentTarget && materialSlot >= 0) {
-    const nextMaterial = this.hotbarSlots[materialSlot].item.resourceType;
-    this.__placementIntentMaterial = nextMaterial;
-    autoSelect(this, materialSlot);
+  if (this.__targetDecision.candidateTarget !== desiredTarget) {
+    this.__targetDecision.candidateTarget = desiredTarget;
+    this.__targetDecision.candidateSince = now;
+    return;
+  }
+
+  const delay = desiredTarget ? TARGET_CONFIRM_DELAY_MS : TARGET_RELEASE_DELAY_MS;
+  if (now - this.__targetDecision.candidateSince < delay) return;
+
+  this.__intentContextUpdating = true;
+  try {
+    confirmTarget(this, desiredTarget);
+  } finally {
+    this.__intentContextUpdating = false;
   }
 };
