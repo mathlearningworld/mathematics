@@ -5,17 +5,25 @@ import { createShorelines } from "./terrain/ShorelineGenerator.js";
 import { createTerrainMasses } from "./terrain/TerrainMassGenerator.js";
 import { createTerrainPaths } from "./terrain/TerrainPathGenerator.js";
 import { createWaterRenderer } from "./terrain/WaterRenderer.js";
+import { composeGorge } from "./terrain/GorgeComposer.js";
+import { composeWorkshopTerrace } from "./terrain/WorkshopTerraceComposer.js";
+import { composeBridgeApproach } from "./terrain/BridgeApproachComposer.js";
+import { composeForestPocket } from "./terrain/ForestPocketComposer.js";
 
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_001B_TERRAIN_RIVER_FOUNDATION_V4";
+const STANDARD = "BUILDERS_VALLEY_PES_001B_AUTHORED_COMPOSITION_V5";
 const MODULES = Object.freeze([
   "RiverGeometry",
   "ShorelineGenerator",
   "TerrainMassGenerator",
   "TerrainPathGenerator",
   "WaterRenderer",
+  "GorgeComposer",
+  "WorkshopTerraceComposer",
+  "BridgeApproachComposer",
+  "ForestPocketComposer",
 ]);
 
 function retireSupersededBlockout(scene) {
@@ -36,10 +44,17 @@ function installTerrainRiverFoundation(scene) {
 
   retireSupersededBlockout(scene);
 
+  const authoredZones = {
+    gorge: composeGorge(scene, geometry),
+    workshopTerrace: composeWorkshopTerrace(scene),
+    bridgeApproach: composeBridgeApproach(scene),
+    forestPocket: composeForestPocket(scene),
+  };
+
   const runtime = {
     standard: STANDARD,
-    status: "GORGE_NATURALIZATION_PATCH_STARTED",
-    phase: "PES-001B_PHASE_2C",
+    status: "AUTHORED_ENVIRONMENT_COMPOSITION_STARTED",
+    phase: "PES-001B_PHASE_2D",
     owner: "frontend/src/sandbox/scenes/BuildersValleyTerrainRiverPatch.js",
     geometry,
     water: createWaterRenderer(scene, geometry),
@@ -47,20 +62,22 @@ function installTerrainRiverFoundation(scene) {
     terrainMasses: createTerrainMasses(scene, geometry),
     paths: paths.container,
     pathAnchors: paths.anchors,
+    authoredZones,
     modules: MODULES,
     visualTargets: Object.freeze([
+      "authored waterfall gorge",
+      "workshop terrace integration",
+      "protected bridge approach clearing",
+      "left-side forest pocket rhythm",
       "centerline drift and width rhythm",
-      "waterfall gorge pool continuity",
-      "recess and shelf shoreline grammar",
-      "shoreline-integrated rock clusters",
-      "protected bridge clearing",
       "spawn-to-bridge-to-workshop guidance",
     ]),
     renderModel: Object.freeze({
       riverSilhouette: "DRIFTED_CONTINUOUS_POLYGON",
-      waterfallTransition: "GORGE_POOL_FUNNEL",
+      waterfallTransition: "AUTHORED_GORGE_COMPOSITION",
       shoreline: "VARIABLE_RECESS_SHELF_BANDS",
       terrainMasses: "SHORELINE_INTEGRATED_ROCK_CLUSTERS",
+      environmentComposition: "AUTHORED_ZONE_COMPOSERS",
       collisionAuthority: "UNCHANGED_STREAM_CONTRACT",
     }),
     gameplayGeometryChanged: false,
@@ -89,6 +106,7 @@ function installTerrainRiverFoundation(scene) {
     crossingProtectionZone: { ...geometry.crossingProtectionZone },
     gorgeTransitionZone: { ...geometry.gorgeTransitionZone },
     pathAnchors: cloneAnchors(runtime.pathAnchors),
+    authoredZones: Object.keys(runtime.authoredZones),
     visualTargets: [...runtime.visualTargets],
     renderModel: { ...runtime.renderModel },
     modules: [...runtime.modules],
