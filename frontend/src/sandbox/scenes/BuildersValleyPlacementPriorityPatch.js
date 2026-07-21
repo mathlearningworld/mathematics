@@ -44,15 +44,19 @@ function distanceFromPlayer(scene, target) {
 }
 
 function findClosePlacedBlock(scene) {
-  return (
-    (scene.placedBlocks ?? [])
-      .filter(
-        (block) =>
-          block?.active && distanceFromPlayer(scene, block) <= PLACED_BLOCK_PICKUP_DISTANCE,
-      )
-      .sort((left, right) => distanceFromPlayer(scene, left) - distanceFromPlayer(scene, right))[0] ??
-    null
-  );
+  let nearest = null;
+  let nearestDistance = PLACED_BLOCK_PICKUP_DISTANCE;
+
+  for (const block of scene.placedBlocks ?? []) {
+    if (!block?.active) continue;
+    const distance = distanceFromPlayer(scene, block);
+    if (distance <= nearestDistance) {
+      nearest = block;
+      nearestDistance = distance;
+    }
+  }
+
+  return nearest;
 }
 
 function clearPlacedBlockTarget(scene) {
@@ -65,6 +69,48 @@ function clearPlacedBlockTarget(scene) {
     scene.__targetDecision.candidateSince = 0;
   }
   scene.targetIndicator?.setVisible(false);
+}
+
+function autoSelectToolForBlock(scene, block) {
+  const material = block.getData?.("resourceType") ?? block.getData?.("material") ?? null;
+  const requiredTool = block.getData?.("requiredTool") ??
+    (material === "wood" ? "axe" : material === "stone" ? "pickaxe" : null);
+  if (!requiredTool) return;
+
+  const slotIndex = scene.hotbarSlots?.findIndex(({ item }) => item?.id === requiredTool);
+  if (!Number.isInteger(slotIndex) || slotIndex < 0) return;
+
+  scene.__intentAutoSelecting = true;
+  try {
+    scene._selectHotbarSlot(slotIndex);
+  } finally {
+    scene.__intentAutoSelecting = false;
+  }
+}
+
+function confirmNearestPlacedBlock(scene, block) {
+  const previousTarget = scene.targetResource;
+  scene.targetResource = block;
+
+  if (scene.__targetDecision) {
+    scene.__targetDecision.confirmedTarget = block;
+    scene.__targetDecision.candidateTarget = null;
+    scene.__targetDecision.candidateSince = 0;
+  }
+
+  scene.targetIndicator
+    ?.setVisible(true)
+    .setPosition(block.x, block.y - 12);
+
+  autoSelectToolForBlock(scene, block);
+
+  if (previousTarget !== block) {
+    scene._recordEvent?.("target_confirmed", {
+      previous: previousTarget?.getData?.("assetId") ?? null,
+      current: block.getData?.("assetId") ?? null,
+      reason: "NEAREST_PLACED_BLOCK_IN_PICKUP_RANGE",
+    });
+  }
 }
 
 function restoreBuildMaterial(scene, resourceType) {
@@ -81,23 +127,6 @@ function restoreBuildMaterial(scene, resourceType) {
   }
 }
 
-function updateForClosePickup(scene, closeBlock, originalNodes) {
-  const previousLastPlacedTarget = scene.__lastPlacedIntentTarget;
-
-  scene.__lastPlacedIntentTarget = null;
-  scene.resourceNodes = [
-    closeBlock,
-    ...(originalNodes ?? []).filter((node) => !isPlacedBlock(scene, node)),
-  ];
-
-  try {
-    originalUpdateTargetResource.call(scene);
-  } finally {
-    scene.resourceNodes = originalNodes;
-    scene.__lastPlacedIntentTarget = previousLastPlacedTarget;
-  }
-}
-
 prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
   const buildMaterial = getActiveBuildMaterial(this);
   if (!buildMaterial) {
@@ -105,14 +134,16 @@ prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
     return;
   }
 
-  const originalNodes = this.resourceNodes;
   const closePlacedBlock = findClosePlacedBlock(this);
-
   if (closePlacedBlock) {
-    updateForClosePickup(this, closePlacedBlock, originalNodes);
+    // Pickup range is deterministic: the nearest placed block always wins.
+    // Do not pass this branch through the general target scoring engine, because
+    // facing and intent weights can otherwise select a farther block.
+    confirmNearestPlacedBlock(this, closePlacedBlock);
     return;
   }
 
+  const originalNodes = this.resourceNodes;
   clearPlacedBlockTarget(this);
 
   this.resourceNodes = Array.isArray(originalNodes)
