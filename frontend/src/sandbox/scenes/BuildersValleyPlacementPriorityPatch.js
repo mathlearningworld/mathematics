@@ -5,20 +5,30 @@ const originalUpdateTargetResource = prototype._updateTargetResource;
 
 const PLACED_BLOCK_PICKUP_DISTANCE = 46;
 
-function getSelectedBuildMaterial(scene) {
-  const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
-  if (selectedItem?.kind !== "BLOCK") return null;
-  if ((scene.inventory?.[selectedItem.resourceType] ?? 0) <= 0) return null;
-
+function getActiveBuildMaterial(scene) {
   const intent = scene.__gameplayIntent;
   if (
     intent?.kind === "BUILD_WITH_MATERIAL" &&
-    intent.resourceType !== selectedItem.resourceType
+    intent.resourceType &&
+    (scene.inventory?.[intent.resourceType] ?? 0) > 0
   ) {
-    return null;
+    return intent.resourceType;
   }
 
-  return selectedItem.resourceType;
+  const intendedMaterial = scene.__placementIntentMaterial;
+  if (intendedMaterial && (scene.inventory?.[intendedMaterial] ?? 0) > 0) {
+    return intendedMaterial;
+  }
+
+  const selectedItem = scene.hotbarSlots?.[scene.selectedSlot]?.item;
+  if (
+    selectedItem?.kind === "BLOCK" &&
+    (scene.inventory?.[selectedItem.resourceType] ?? 0) > 0
+  ) {
+    return selectedItem.resourceType;
+  }
+
+  return null;
 }
 
 function isPlacedBlock(scene, target) {
@@ -34,12 +44,15 @@ function distanceFromPlayer(scene, target) {
 }
 
 function findClosePlacedBlock(scene) {
-  return (scene.placedBlocks ?? [])
-    .filter(
-      (block) =>
-        block?.active && distanceFromPlayer(scene, block) <= PLACED_BLOCK_PICKUP_DISTANCE,
-    )
-    .sort((left, right) => distanceFromPlayer(scene, left) - distanceFromPlayer(scene, right))[0] ?? null;
+  return (
+    (scene.placedBlocks ?? [])
+      .filter(
+        (block) =>
+          block?.active && distanceFromPlayer(scene, block) <= PLACED_BLOCK_PICKUP_DISTANCE,
+      )
+      .sort((left, right) => distanceFromPlayer(scene, left) - distanceFromPlayer(scene, right))[0] ??
+    null
+  );
 }
 
 function clearPlacedBlockTarget(scene) {
@@ -54,7 +67,7 @@ function clearPlacedBlockTarget(scene) {
   scene.targetIndicator?.setVisible(false);
 }
 
-function restoreSelectedBuildMaterial(scene, resourceType) {
+function restoreBuildMaterial(scene, resourceType) {
   const slotIndex = scene.hotbarSlots?.findIndex(
     ({ item }) => item?.kind === "BLOCK" && item.resourceType === resourceType,
   );
@@ -71,9 +84,6 @@ function restoreSelectedBuildMaterial(scene, resourceType) {
 function updateForClosePickup(scene, closeBlock, originalNodes) {
   const previousLastPlacedTarget = scene.__lastPlacedIntentTarget;
 
-  // At deliberate pickup range, the placed block becomes a real context target.
-  // Temporarily remove the just-placed penalty so the existing scoring and
-  // interaction queue can confirm it and select its required tool normally.
   scene.__lastPlacedIntentTarget = null;
   scene.resourceNodes = [
     closeBlock,
@@ -89,7 +99,7 @@ function updateForClosePickup(scene, closeBlock, originalNodes) {
 }
 
 prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
-  const buildMaterial = getSelectedBuildMaterial(this);
+  const buildMaterial = getActiveBuildMaterial(this);
   if (!buildMaterial) {
     originalUpdateTargetResource.call(this);
     return;
@@ -105,8 +115,6 @@ prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
 
   clearPlacedBlockTarget(this);
 
-  // While the player is building, placed blocks outside deliberate pickup range
-  // must not steal focus from the next placement tile.
   this.resourceNodes = Array.isArray(originalNodes)
     ? originalNodes.filter((node) => !isPlacedBlock(this, node))
     : originalNodes;
@@ -122,6 +130,6 @@ prototype._updateTargetResource = function updateTargetWithPlacementPriority() {
   }
 
   if (!this.targetResource) {
-    restoreSelectedBuildMaterial(this, buildMaterial);
+    restoreBuildMaterial(this, buildMaterial);
   }
 };
