@@ -75,6 +75,21 @@ function chooseAdjacentTarget(scene) {
   return best;
 }
 
+function isPlacedBlock(scene, target) {
+  if (!target) return false;
+  if (scene.placedBlocks?.includes(target)) return true;
+  return (target.getData?.("assetId") ?? "").startsWith("BV_BLOCK_");
+}
+
+function targetIndicatorPoint(scene, target) {
+  // Placed blocks are centered on their world point. Natural resource artwork uses
+  // a bottom-center anchor, so it keeps the historical upward visual correction.
+  return {
+    x: target.x,
+    y: isPlacedBlock(scene, target) ? target.y : target.y - 12,
+  };
+}
+
 function selectRequiredTool(scene, target) {
   const requiredTool = target?.getData?.("requiredTool");
   const slotIndex = scene.hotbarSlots?.findIndex(({ item }) => item?.id === requiredTool);
@@ -96,7 +111,8 @@ function applyTarget(scene, target, reason) {
     scene.__targetDecision.candidateTarget = null;
     scene.__targetDecision.candidateSince = 0;
   }
-  scene.targetIndicator?.setVisible(true).setPosition(target.x, target.y - 12);
+  const indicatorPoint = targetIndicatorPoint(scene, target);
+  scene.targetIndicator?.setVisible(true).setPosition(indicatorPoint.x, indicatorPoint.y);
   selectRequiredTool(scene, target);
 
   if (previous !== target) {
