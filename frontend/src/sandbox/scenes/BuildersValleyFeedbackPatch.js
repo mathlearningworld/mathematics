@@ -15,9 +15,11 @@ const GHOST_LIGHT = Object.freeze({
 });
 
 const OUTLINE = 0x202e32;
-const SHADOW = 0x17252c;
 const VALID_STROKE = 0xffd65a;
 const INVALID_STROKE = 0xe55b55;
+const CORNER_HALF_WIDTH = 16;
+const CORNER_HALF_HEIGHT = 13;
+const CORNER_ARM = 7;
 
 function snapshotFeedback(scene) {
   const prediction = scene.__placementPrediction;
@@ -33,44 +35,46 @@ function snapshotFeedback(scene) {
   };
 }
 
+function drawCornerIndicator(graphics, color, alpha) {
+  graphics.clear();
+  graphics.lineStyle(2, color, alpha);
+
+  const left = -CORNER_HALF_WIDTH;
+  const right = CORNER_HALF_WIDTH;
+  const top = -CORNER_HALF_HEIGHT;
+  const bottom = CORNER_HALF_HEIGHT;
+  const arm = CORNER_ARM;
+
+  graphics.lineBetween(left, top, left + arm, top);
+  graphics.lineBetween(left, top, left, top + arm);
+  graphics.lineBetween(right, top, right - arm, top);
+  graphics.lineBetween(right, top, right, top + arm);
+  graphics.lineBetween(left, bottom, left + arm, bottom);
+  graphics.lineBetween(left, bottom, left, bottom - arm);
+  graphics.lineBetween(right, bottom, right - arm, bottom);
+  graphics.lineBetween(right, bottom, right, bottom - arm);
+}
+
 function createPlacementGhost(scene) {
-  // Mirror createPlacedBlock exactly: all child geometry uses the same local
-  // coordinates, so the preview silhouette and the final block share one visual
-  // anchor as well as one world point.
-  const shadow = scene.add.ellipse(0, 9, 29, 9, SHADOW, 0.18);
-  const front = scene.add.rectangle(0, 1, 28, 22, OUTLINE, 0.55);
-  const face = scene.add.rectangle(0, -1, 24, 17, GHOST_FILL.wood, 0.38);
-  const top = scene.add.rectangle(0, -10, 24, 6, GHOST_LIGHT.wood, 0.46);
-  const seam = scene.add.rectangle(6, -1, 3, 15, OUTLINE, 0.2);
+  // The preview mirrors createPlacedBlock's local anchor, but remains visually
+  // lightweight: a translucent silhouette plus the same four-corner language
+  // used by pickup focus. No filled panel or full rectangular border is drawn.
+  const front = scene.add.rectangle(0, 1, 28, 22, OUTLINE, 0.16);
+  const face = scene.add.rectangle(0, -1, 24, 17, GHOST_FILL.wood, 0.2);
+  const top = scene.add.rectangle(0, -10, 24, 6, GHOST_LIGHT.wood, 0.26);
+  const seam = scene.add.rectangle(6, -1, 3, 15, OUTLINE, 0.1);
+  const corners = scene.add.graphics();
 
-  const frame = scene.add.rectangle(0, 0, 30, 24, 0xffffff, 0);
-  frame.setStrokeStyle(2, VALID_STROKE, 0.95);
-
-  const invalidMarkA = scene.add.rectangle(0, 0, 24, 3, INVALID_STROKE, 0.95).setAngle(45);
-  const invalidMarkB = scene.add.rectangle(0, 0, 24, 3, INVALID_STROKE, 0.95).setAngle(-45);
-
-  const container = scene.add.container(0, 0, [
-    shadow,
-    front,
-    face,
-    top,
-    seam,
-    frame,
-    invalidMarkA,
-    invalidMarkB,
-  ]);
+  const container = scene.add.container(0, 0, [front, face, top, seam, corners]);
   container.setVisible(false);
 
   return {
     container,
-    shadow,
     front,
     face,
     top,
     seam,
-    frame,
-    invalidMarkA,
-    invalidMarkB,
+    corners,
     lastResourceType: null,
     lastValid: null,
   };
@@ -95,23 +99,25 @@ function renderPlacementFeedback(scene, time) {
   const resourceType = prediction.resourceType;
   const fill = GHOST_FILL[resourceType] ?? GHOST_FILL.wood;
   const light = GHOST_LIGHT[resourceType] ?? GHOST_LIGHT.wood;
-  const pulse = 0.34 + Math.sin((time ?? 0) / 180) * 0.06;
+  const pulse = 0.18 + Math.sin((time ?? 0) / 220) * 0.025;
 
   ghost.container
     .setVisible(true)
     .setPosition(Math.round(prediction.worldPoint.x), Math.round(prediction.worldPoint.y))
     .setDepth(150 + Math.floor(prediction.worldPoint.y));
 
-  ghost.front.setFillStyle(OUTLINE, valid ? 0.52 : 0.34);
-  ghost.face.setFillStyle(fill, valid ? pulse : 0.2);
-  ghost.top.setFillStyle(light, valid ? Math.min(0.62, pulse + 0.12) : 0.22);
+  ghost.front.setFillStyle(OUTLINE, valid ? 0.14 : 0.08);
+  ghost.face.setFillStyle(fill, valid ? pulse : 0.1);
+  ghost.top.setFillStyle(light, valid ? Math.min(0.28, pulse + 0.08) : 0.12);
   ghost.seam
     .setPosition(resourceType === "wood" ? 6 : -6, -1)
-    .setFillStyle(OUTLINE, valid ? 0.2 : 0.12);
-  ghost.shadow.setAlpha(valid ? 0.18 : 0.1);
-  ghost.frame.setStrokeStyle(2, valid ? VALID_STROKE : INVALID_STROKE, valid ? 0.95 : 1);
-  ghost.invalidMarkA.setVisible(!valid);
-  ghost.invalidMarkB.setVisible(!valid);
+    .setFillStyle(OUTLINE, valid ? 0.1 : 0.06);
+
+  drawCornerIndicator(
+    ghost.corners,
+    valid ? VALID_STROKE : INVALID_STROKE,
+    valid ? 0.95 : 1,
+  );
 
   ghost.lastResourceType = resourceType;
   ghost.lastValid = valid;
