@@ -43,6 +43,7 @@ import "./sandbox/scenes/BuildersValleyVisibleGraphicsIntegrationPatch.js";
 import "./sandbox/scenes/BuildersValleySceneCompositionPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentArtistPassPatch.js";
 import "./sandbox/scenes/BuildersValleyHeroCompositionCalibrationPatch.js";
+import "./sandbox/scenes/BuildersValleyHeroTerrainMassPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentReleaseCandidatePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
