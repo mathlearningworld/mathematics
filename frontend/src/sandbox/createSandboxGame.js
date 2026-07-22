@@ -4,6 +4,7 @@ import "./scenes/BuildersValleyIntentPatch.js";
 import "./scenes/BuildersValleyVisualPatch.js";
 import "./scenes/BuildersValleyLandmarkPatch.js";
 import "./scenes/BuildersValleyEnvironmentVariantsPatch.js";
+import "./scenes/BuildersValleyWorldAuthorityPatch.js";
 import {
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
