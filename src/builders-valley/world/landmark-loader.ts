@@ -9,6 +9,7 @@ export interface LoadedLandmarkRuntime {
 export interface LandmarkLoader {
   load(runtime: LoadedLandmarkRuntime): Promise<void>;
   unload(id: string): Promise<void>;
+  isLoaded(id: string): boolean;
 }
 
 export function createLandmarkLoader(registry: LandmarkRegistry): LandmarkLoader {
@@ -16,9 +17,19 @@ export function createLandmarkLoader(registry: LandmarkRegistry): LandmarkLoader
 
   return {
     async load(runtime) {
+      if (loaded.has(runtime.registration.id)) {
+        return;
+      }
+
       registry.register(runtime.registration);
-      await runtime.registration.activate();
-      loaded.set(runtime.registration.id, runtime);
+
+      try {
+        await runtime.registration.activate();
+        loaded.set(runtime.registration.id, runtime);
+      } catch (error) {
+        registry.unregister(runtime.registration.id);
+        throw error;
+      }
     },
     async unload(id) {
       const runtime = loaded.get(id);
@@ -27,8 +38,16 @@ export function createLandmarkLoader(registry: LandmarkRegistry): LandmarkLoader
       }
 
       runtime.stop?.();
-      await runtime.registration.deactivate?.();
-      loaded.delete(id);
+
+      try {
+        await runtime.registration.deactivate?.();
+      } finally {
+        loaded.delete(id);
+        registry.unregister(id);
+      }
+    },
+    isLoaded(id) {
+      return loaded.has(id);
     },
   };
 }
