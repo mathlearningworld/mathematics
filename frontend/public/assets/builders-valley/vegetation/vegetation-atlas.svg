@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
+  <defs>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="0.4"/></filter>
+  </defs>
+  <!-- tree_broadleaf_01 -->
+  <g transform="translate(0 0)">
+    <ellipse cx="32" cy="54" rx="22" ry="6" fill="#14251f" opacity=".34"/>
+    <rect x="28" y="31" width="9" height="24" rx="2" fill="#6b4328"/>
+    <rect x="30" y="31" width="3" height="21" fill="#a06a38"/>
+    <circle cx="18" cy="27" r="13" fill="#173a2b"/>
+    <circle cx="31" cy="20" r="17" fill="#28583b"/>
+    <circle cx="45" cy="29" r="14" fill="#3f7547"/>
+    <circle cx="34" cy="10" r="11" fill="#789d55"/>
+    <path d="M23 16h16v4H23zM37 25h11v3H37z" fill="#9eb76d" opacity=".45"/>
+  </g>
+  <!-- tree_broadleaf_02 -->
+  <g transform="translate(64 0)">
+    <ellipse cx="32" cy="54" rx="21" ry="6" fill="#14251f" opacity=".34"/>
+    <rect x="29" y="30" width="8" height="25" rx="2" fill="#674126"/>
+    <rect x="31" y="31" width="3" height="20" fill="#946036"/>
+    <circle cx="17" cy="25" r="12" fill="#18372a"/>
+    <circle cx="29" cy="17" r="16" fill="#315f3d"/>
+    <circle cx="45" cy="24" r="15" fill="#477c49"/>
+    <circle cx="38" cy="9" r="10" fill="#85a45b"/>
+    <path d="M18 19h15v3H18zM38 16h10v3H38z" fill="#b0c47b" opacity=".4"/>
+  </g>
+  <!-- shrub_01 -->
+  <g transform="translate(128 0)">
+    <ellipse cx="32" cy="49" rx="24" ry="7" fill="#14251f" opacity=".32"/>
+    <circle cx="17" cy="37" r="13" fill="#244d35"/>
+    <circle cx="31" cy="31" r="16" fill="#3e7344"/>
+    <circle cx="47" cy="38" r="12" fill="#739a52"/>
+    <path d="M18 31h13v3H18zM35 26h11v3H35z" fill="#a7b96c" opacity=".35"/>
+  </g>
+  <!-- shrub_02 -->
+  <g transform="translate(192 0)">
+    <ellipse cx="32" cy="49" rx="25" ry="7" fill="#14251f" opacity=".3"/>
+    <circle cx="16" cy="38" r="12" fill="#2a5638"/>
+    <circle cx="31" cy="30" r="17" fill="#467c48"/>
+    <circle cx="48" cy="37" r="13" fill="#7ea357"/>
+    <circle cx="34" cy="21" r="7" fill="#9ab567"/>
+  </g>
+  <!-- reeds_01 -->
+  <g transform="translate(0 64)" stroke-linecap="round">
+    <ellipse cx="32" cy="55" rx="20" ry="4" fill="#183226" opacity=".25"/>
+    <path d="M18 54L15 25M25 54L27 19M33 54L31 29M40 54L44 22M49 54L47 31" stroke="#527944" stroke-width="3"/>
+    <path d="M15 25l-7 4M27 19l7 4M44 22l8 3M31 29l-6 3" stroke="#82a15b" stroke-width="3"/>
+  </g>
+  <!-- flower_patch_01 -->
+  <g transform="translate(64 64)">
+    <ellipse cx="32" cy="52" rx="22" ry="5" fill="#183226" opacity=".18"/>
+    <g stroke="#527442" stroke-width="2">
+      <path d="M17 51V35M28 52V29M39 52V37M49 52V31"/>
+    </g>
+    <g>
+      <circle cx="17" cy="34" r="4" fill="#d9809b"/><circle cx="28" cy="28" r="4" fill="#f0c96e"/>
+      <circle cx="39" cy="36" r="4" fill="#e6ecdd"/><circle cx="49" cy="30" r="4" fill="#e9956d"/>
+      <circle cx="17" cy="34" r="1" fill="#f8e9b7"/><circle cx="28" cy="28" r="1" fill="#fff2bb"/>
+    </g>
+  </g>
+  <!-- moss_rock_01 -->
+  <g transform="translate(128 64)">
+    <ellipse cx="32" cy="51" rx="24" ry="6" fill="#152620" opacity=".28"/>
+    <path d="M10 45l7-18 18-9 16 8 5 19z" fill="#53605b"/>
+    <path d="M17 28l18-10 10 7-13 7z" fill="#859087"/>
+    <path d="M12 42l9-14 8 3-3 12z" fill="#527347"/>
+    <path d="M32 30l13-5 7 9-15 4z" fill="#6f8b52"/>
+  </g>
+  <!-- foreground_cluster_01 -->
+  <g transform="translate(192 64)">
+    <ellipse cx="31" cy="53" rx="30" ry="8" fill="#10241f" opacity=".38"/>
+    <circle cx="13" cy="37" r="15" fill="#173a2b"/>
+    <circle cx="29" cy="28" r="18" fill="#2f5d3c"/>
+    <circle cx="47" cy="37" r="14" fill="#467a48"/>
+    <circle cx="35" cy="19" r="10" fill="#789d55"/>
+    <path d="M51 50l5-16 6 16z" fill="#66736f"/><path d="M54 36l3-5 3 5z" fill="#9aa399"/>
+  </g>
+</svg>
