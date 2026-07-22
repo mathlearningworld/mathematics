@@ -13,7 +13,8 @@
     "verify:builders-valley-environment-rc": "node scripts/verify-builders-valley-environment-rc.mjs",
     "verify:production-asset-library": "node scripts/verify-production-asset-library.mjs",
     "verify:pal-preview": "node scripts/verify-pal-preview.mjs",
-    "verify:pal-thai-buildings": "node scripts/verify-pal-thai-buildings.mjs"
+    "verify:pal-thai-buildings": "node scripts/verify-pal-thai-buildings.mjs",
+    "verify:pal-graphics-003-to-006": "node scripts/verify-pal-graphics-003-to-006.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"
