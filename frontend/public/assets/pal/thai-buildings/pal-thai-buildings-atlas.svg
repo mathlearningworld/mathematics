@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="192" viewBox="0 0 512 192" shape-rendering="crispEdges">
+  <rect width="512" height="192" fill="none"/>
+
+  <g id="raised_teak_house_01" transform="translate(0 0)">
+    <ellipse cx="64" cy="174" rx="52" ry="9" fill="#4f623d" opacity=".38"/>
+    <path d="M18 74 L64 34 L110 74 Z" fill="#6f321f"/>
+    <path d="M26 70 L64 42 L102 70 Z" fill="#a64e2b"/>
+    <rect x="28" y="72" width="72" height="58" fill="#8b5a34"/>
+    <rect x="34" y="79" width="60" height="44" fill="#a97043"/>
+    <rect x="45" y="89" width="14" height="20" fill="#4c2e22"/>
+    <rect x="69" y="89" width="14" height="20" fill="#4c2e22"/>
+    <rect x="43" y="128" width="8" height="34" fill="#5b3825"/>
+    <rect x="77" y="128" width="8" height="34" fill="#5b3825"/>
+    <rect x="52" y="132" width="24" height="5" fill="#6d442a"/>
+    <rect x="57" y="137" width="14" height="6" fill="#8d5d36"/>
+    <rect x="60" y="143" width="8" height="19" fill="#6a4128"/>
+    <rect x="24" y="70" width="80" height="5" fill="#3f271d"/>
+    <rect x="32" y="119" width="64" height="7" fill="#5d3927"/>
+  </g>
+
+  <g id="waterside_shop_01" transform="translate(128 0)">
+    <ellipse cx="64" cy="174" rx="54" ry="9" fill="#4f623d" opacity=".34"/>
+    <rect x="20" y="79" width="88" height="57" fill="#8a5735"/>
+    <path d="M14 80 L64 45 L114 80 Z" fill="#64402e"/>
+    <path d="M22 76 L64 50 L106 76 Z" fill="#8b5c3f"/>
+    <rect x="27" y="86" width="74" height="10" fill="#2f6c64"/>
+    <rect x="31" y="96" width="66" height="7" fill="#4c9284"/>
+    <rect x="34" y="105" width="60" height="22" fill="#5a3827"/>
+    <rect x="39" y="110" width="12" height="12" fill="#d39a43"/>
+    <rect x="57" y="110" width="12" height="12" fill="#a84b2a"/>
+    <rect x="75" y="110" width="12" height="12" fill="#d0c06d"/>
+    <rect x="29" y="134" width="8" height="28" fill="#5b3825"/>
+    <rect x="91" y="134" width="8" height="28" fill="#5b3825"/>
+    <rect x="18" y="160" width="92" height="5" fill="#69513d"/>
+    <rect x="24" y="165" width="80" height="4" fill="#8d6c4b"/>
+  </g>
+
+  <g id="market_stall_01" transform="translate(256 0)">
+    <ellipse cx="64" cy="174" rx="50" ry="8" fill="#4f623d" opacity=".34"/>
+    <rect x="23" y="88" width="82" height="48" fill="#7b4a2e"/>
+    <rect x="18" y="67" width="92" height="23" fill="#c55e32"/>
+    <rect x="18" y="67" width="23" height="23" fill="#2e6f7d"/>
+    <rect x="64" y="67" width="23" height="23" fill="#d7a144"/>
+    <rect x="29" y="98" width="70" height="12" fill="#533021"/>
+    <rect x="34" y="111" width="60" height="18" fill="#9d6d3e"/>
+    <circle cx="45" cy="120" r="5" fill="#d9942a"/>
+    <circle cx="60" cy="120" r="5" fill="#6b9c3c"/>
+    <circle cx="75" cy="120" r="5" fill="#b54f39"/>
+    <circle cx="88" cy="120" r="5" fill="#e0bd52"/>
+    <rect x="27" y="135" width="7" height="28" fill="#5b3825"/>
+    <rect x="94" y="135" width="7" height="28" fill="#5b3825"/>
+    <rect x="22" y="163" width="84" height="5" fill="#6f4a31"/>
+  </g>
+
+  <g id="rice_barn_01" transform="translate(384 0)">
+    <ellipse cx="64" cy="174" rx="50" ry="8" fill="#4f623d" opacity=".34"/>
+    <rect x="28" y="81" width="72" height="54" fill="#8a5b34"/>
+    <path d="M18 82 L64 45 L110 82 Z" fill="#8f4b2c"/>
+    <path d="M28 78 L64 52 L100 78 Z" fill="#c06a35"/>
+    <rect x="50" y="98" width="28" height="37" fill="#5c3724"/>
+    <rect x="55" y="103" width="18" height="27" fill="#765037"/>
+    <rect x="35" y="134" width="8" height="28" fill="#5b3825"/>
+    <rect x="85" y="134" width="8" height="28" fill="#5b3825"/>
+    <rect x="46" y="141" width="36" height="5" fill="#68422a"/>
+    <rect x="49" y="146" width="30" height="5" fill="#88613c"/>
+    <path d="M16 154 h18 v12 H16 z" fill="#b18b4c"/>
+    <path d="M94 150 h18 v16 H94 z" fill="#c09b5b"/>
+  </g>
+</svg>
