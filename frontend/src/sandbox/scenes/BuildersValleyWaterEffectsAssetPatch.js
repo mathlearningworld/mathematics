@@ -4,7 +4,7 @@ import { STREAM } from "../config/worldContract.js";
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 const ASSET_ID = "BV_EFFECT_WATER_ATLAS_01";
-const STANDARD = "BUILDERS_VALLEY_PES_005B_WATER_EFFECTS_ASSET_V1";
+const STANDARD = "BUILDERS_VALLEY_PES_005B1_WATER_EFFECTS_VISUAL_CALIBRATION_V1";
 
 function addEffect(scene, frame, x, y, scale, depth, alpha = 1, flipX = false) {
   return scene.add.image(x, y, ASSET_ID, frame)
@@ -29,25 +29,26 @@ function installWaterEffectsAsset(scene) {
   }
 
   const centerX = STREAM.left + STREAM.width / 2;
-  const lipY = 304;
-  const impactY = 330;
+  const lipY = 306;
+  const impactY = 322;
 
   const effects = [
-    addEffect(scene, "waterfall_lip_foam", centerX, lipY, 1.65, 181, 0.86),
-    addEffect(scene, "impact_foam", centerX, impactY, 1.5, 182, 0.8),
-    addEffect(scene, "mist_cloud", centerX - 32, impactY - 16, 1.25, 183, 0.38),
-    addEffect(scene, "mist_cloud", centerX + 36, impactY - 8, 1.05, 183, 0.3, true),
-    addEffect(scene, "side_splash_left", STREAM.left + 18, impactY + 10, 0.8, 182, 0.7),
-    addEffect(scene, "side_splash_right", STREAM.left + STREAM.width - 18, impactY + 12, 0.8, 182, 0.7),
-    addEffect(scene, "river_ripple", centerX - 14, 430, 1.1, 179, 0.34),
-    addEffect(scene, "river_ripple", centerX + 20, 520, 0.86, 179, 0.26, true),
+    addEffect(scene, "waterfall_lip_foam", centerX, lipY, 1.08, 181, 0.55),
+    addEffect(scene, "impact_foam", centerX + 2, impactY, 0.78, 182, 0.46),
+    addEffect(scene, "mist_cloud", centerX - 24, impactY - 10, 0.94, 183, 0.16),
+    addEffect(scene, "mist_cloud", centerX + 30, impactY - 3, 0.76, 183, 0.12, true),
+    addEffect(scene, "side_splash_left", STREAM.left + 26, impactY + 4, 0.46, 182, 0.34),
+    addEffect(scene, "side_splash_right", STREAM.left + STREAM.width - 22, impactY + 13, 0.38, 182, 0.28),
+    addEffect(scene, "river_ripple", centerX - 10, 408, 0.58, 179, 0.16),
+    addEffect(scene, "river_ripple", centerX + 18, 498, 0.44, 179, 0.11, true),
   ];
 
   effects.forEach((effect, index) => {
     effect.setData("anchorX", effect.x);
     effect.setData("anchorY", effect.y);
     effect.setData("baseAlpha", effect.alpha);
-    effect.setData("phase", index * 0.85);
+    effect.setData("phase", index * 0.93);
+    effect.setData("motionScale", index < 2 ? 0.52 : index < 6 ? 0.72 : 0.25);
   });
 
   const fallbackWaterFx = scene.__productionDepthPassRuntime?.objects?.waterFx ?? [];
@@ -56,15 +57,17 @@ function installWaterEffectsAsset(scene) {
   let elapsed = 0;
   const updateHandler = (_time, delta) => {
     elapsed += delta / 1000;
-    effects.forEach((effect, index) => {
+    effects.forEach((effect) => {
       const phase = effect.getData("phase");
       const anchorX = effect.getData("anchorX");
       const anchorY = effect.getData("anchorY");
       const baseAlpha = effect.getData("baseAlpha");
-      const motionScale = index < 6 ? 1 : 0.45;
-      effect.x = anchorX + Math.sin(elapsed * 0.7 + phase) * 1.8 * motionScale;
-      effect.y = anchorY + Math.cos(elapsed * 0.55 + phase) * 1.1 * motionScale;
-      effect.alpha = Math.max(0.12, baseAlpha + Math.sin(elapsed * 0.9 + phase) * 0.055);
+      const motionScale = effect.getData("motionScale");
+      const wave = Math.sin(elapsed * 0.62 + phase);
+      const easedWave = wave * (0.72 + 0.28 * Math.abs(wave));
+      effect.x = anchorX + easedWave * 1.2 * motionScale;
+      effect.y = anchorY + Math.cos(elapsed * 0.48 + phase) * 0.72 * motionScale;
+      effect.alpha = Math.max(0.06, baseAlpha + Math.sin(elapsed * 0.74 + phase) * 0.024);
     });
   };
 
@@ -76,9 +79,10 @@ function installWaterEffectsAsset(scene) {
     status: "ASSET_ACTIVE",
     assetId: ASSET_ID,
     deliveredFrames: scene.textures.get(ASSET_ID).getFrameNames(),
-    productionPhase: "PES-005B",
-    compositionMode: "FOCAL_WATERFALL_EFFECTS_WITH_RESTRAINED_RIVER_ACCENTS",
-    animationPolicy: "BOUNDED_ANCHOR_OSCILLATION",
+    productionPhase: "PES-005B.1",
+    compositionMode: "RESTRAINED_FOCAL_WATERFALL_EFFECTS",
+    animationPolicy: "BOUNDED_EASED_ANCHOR_OSCILLATION",
+    calibrationPolicy: "REDUCED_SCALE_ALPHA_BRIGHTNESS_AND_SYMMETRY",
     effectCount: effects.length,
     fallbackSuppressed: fallbackWaterFx.length > 0,
     collisionObjectsAdded: 0,
@@ -102,6 +106,7 @@ prototype.create = function createWithProductionWaterEffects() {
     productionPhase: runtime.productionPhase,
     compositionMode: runtime.compositionMode,
     animationPolicy: runtime.animationPolicy,
+    calibrationPolicy: runtime.calibrationPolicy,
     effectCount: runtime.effectCount ?? 0,
     fallbackSuppressed: Boolean(runtime.fallbackSuppressed),
     collisionObjectsAdded: 0,
