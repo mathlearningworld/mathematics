@@ -1,0 +1,36 @@
+{
+  "frames": {
+    "lotus_flower_01": {
+      "frame": { "x": 0, "y": 0, "w": 128, "h": 128 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+      "sourceSize": { "w": 128, "h": 128 },
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    "lotus_leaf_cluster_01": {
+      "frame": { "x": 128, "y": 0, "w": 128, "h": 128 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+      "sourceSize": { "w": 128, "h": 128 },
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    "rice_clump_01": {
+      "frame": { "x": 256, "y": 0, "w": 128, "h": 128 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+      "sourceSize": { "w": 128, "h": 128 },
+      "pivot": { "x": 0.5, "y": 1 }
+    }
+  },
+  "meta": {
+    "app": "Math Learning World PAL-001A",
+    "version": "1.0.0",
+    "image": "pal-thai-wetland-atlas.svg",
+    "format": "RGBA8888",
+    "size": { "w": 384, "h": 128 },
+    "scale": "1"
+  }
+}
