@@ -7,6 +7,13 @@ import {
   PRODUCTION_ASSET_LIBRARY_VERSION,
   summarizeProductionAssetLibrary,
 } from "../src/sandbox/assets/ProductionAssetLibraryManifest.js";
+import {
+  PAL_001A_ATLASES,
+  PAL_001A_DELIVERED_ASSETS,
+  PAL_001A_DELIVERY_STANDARD,
+  PAL_001A_DELIVERY_VERSION,
+  summarizePal001aDelivery,
+} from "../src/sandbox/assets/Pal001ThaiNatureDeliveryManifest.js";
 
 const failures = [];
 
@@ -65,7 +72,38 @@ for (const record of PRODUCTION_ASSET_LIBRARY) {
   }
 }
 
+assert(
+  PAL_001A_DELIVERY_STANDARD === "MATH_LEARNING_WORLD_PAL_001A_THAI_NATURE_DECORATIVE_DELIVERY_V1",
+  "unexpected PAL-001A delivery standard",
+);
+assert(PAL_001A_DELIVERY_VERSION === "PAL_001A_DELIVERY_V1", "unexpected PAL-001A delivery version");
+
+const atlasIds = new Set(PAL_001A_ATLASES.map((atlas) => atlas.id));
+assert(atlasIds.size === PAL_001A_ATLASES.length, "PAL-001A atlas ids must be unique");
+for (const atlas of PAL_001A_ATLASES) {
+  assert(Boolean(atlas.textureUrl), `${atlas.id}: textureUrl required`);
+  assert(Boolean(atlas.dataUrl), `${atlas.id}: dataUrl required`);
+  assert(Number.isInteger(atlas.frameCount) && atlas.frameCount > 0, `${atlas.id}: frameCount must be positive`);
+}
+
+const deliveredIds = new Set();
+for (const delivery of PAL_001A_DELIVERED_ASSETS) {
+  assert(!deliveredIds.has(delivery.assetId), `duplicate PAL-001A delivery: ${delivery.assetId}`);
+  deliveredIds.add(delivery.assetId);
+  assert(ids.has(delivery.assetId), `${delivery.assetId}: delivery does not map to PAL source record`);
+  assert(atlasIds.has(delivery.atlasId), `${delivery.assetId}: unknown atlas ${delivery.atlasId}`);
+  assert(typeof delivery.frame === "string" && delivery.frame.length > 0, `${delivery.assetId}: frame required`);
+  assert(delivery.deliveryStatus === "DELIVERED", `${delivery.assetId}: delivery status must be DELIVERED`);
+  assert(delivery.activationStatus === "DISABLED", `${delivery.assetId}: PAL-001A delivery must remain disabled`);
+
+  const sourceRecord = PRODUCTION_ASSET_LIBRARY.find((record) => record.id === delivery.assetId);
+  assert(sourceRecord?.pack === "PAL-001_THAI_NATURE", `${delivery.assetId}: must belong to PAL-001`);
+  assert(sourceRecord?.collisionPolicy === "NONE", `${delivery.assetId}: decorative delivery must add no collision`);
+  assert(sourceRecord?.interactionPolicy === "DECORATIVE_ONLY", `${delivery.assetId}: decorative delivery must add no interaction`);
+}
+
 const summary = summarizeProductionAssetLibrary();
+const deliverySummary = summarizePal001aDelivery();
 console.log(`Production Asset Library: ${summary.manifestVersion}`);
 console.table(
   PRODUCTION_ASSET_LIBRARY.map((record) => ({
@@ -80,11 +118,15 @@ console.table(
 console.log(`Declared: ${summary.declaredAssetCount}`);
 console.log(`Enabled: ${summary.enabledAssetCount}`);
 console.log("Lifecycle:", summary.byLifecycle);
+console.log(`PAL-001A delivery: ${deliverySummary.version}`);
+console.log(`Atlases: ${deliverySummary.atlasCount}`);
+console.log(`Delivered decorative assets: ${deliverySummary.deliveredAssetCount}`);
+console.log(`Activated decorative assets: ${deliverySummary.enabledAssetCount}`);
 
 if (failures.length > 0) {
   console.error("Production Asset Library verification: FAIL");
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log("PASS: PAL-001 foundation is safe; planned assets remain disabled and gameplay candidates remain contract-gated.");
+  console.log("PASS: PAL-001A Thai nature decorative atlases are delivered, contract-mapped, collision-free, and safely disabled pending runtime composition approval.");
 }
