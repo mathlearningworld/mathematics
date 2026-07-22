@@ -1,0 +1,17 @@
+{
+  "frames": {
+    "carpenter_idle_south_01": {"frame":{"x":0,"y":0,"w":96,"h":96},"rotated":false,"trimmed":false,"spriteSourceSize":{"x":0,"y":0,"w":96,"h":96},"sourceSize":{"w":96,"h":96}},
+    "farmer_idle_south_01": {"frame":{"x":96,"y":0,"w":96,"h":96},"rotated":false,"trimmed":false,"spriteSourceSize":{"x":0,"y":0,"w":96,"h":96},"sourceSize":{"w":96,"h":96}},
+    "merchant_idle_south_01": {"frame":{"x":192,"y":0,"w":96,"h":96},"rotated":false,"trimmed":false,"spriteSourceSize":{"x":0,"y":0,"w":96,"h":96},"sourceSize":{"w":96,"h":96}},
+    "elder_idle_south_01": {"frame":{"x":288,"y":0,"w":96,"h":96},"rotated":false,"trimmed":false,"spriteSourceSize":{"x":0,"y":0,"w":96,"h":96},"sourceSize":{"w":96,"h":96}},
+    "child_idle_south_01": {"frame":{"x":384,"y":0,"w":96,"h":96},"rotated":false,"trimmed":false,"spriteSourceSize":{"x":0,"y":0,"w":96,"h":96},"sourceSize":{"w":96,"h":96}}
+  },
+  "meta": {
+    "app": "Math Learning World PAL-007A",
+    "version": "1.0",
+    "image": "pal-thai-character-npc-atlas.svg",
+    "format": "RGBA8888",
+    "size": {"w":480,"h":96},
+    "scale": "1"
+  }
+}
