@@ -45,6 +45,7 @@ import "./sandbox/scenes/BuildersValleyEnvironmentArtistPassPatch.js";
 import "./sandbox/scenes/BuildersValleyHeroCompositionCalibrationPatch.js";
 import "./sandbox/scenes/BuildersValleyHeroTerrainMassPatch.js";
 import "./sandbox/scenes/BuildersValleyHeroTerrainMassCalibrationPatch.js";
+import "./sandbox/scenes/BuildersValleyHeroCliffCanyonCompositionPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentReleaseCandidatePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
