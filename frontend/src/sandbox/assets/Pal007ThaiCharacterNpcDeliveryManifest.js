@@ -12,28 +12,32 @@ export const PAL_007A_CHARACTER_NPC_ATLASES = Object.freeze([
   }),
 ]);
 
-export const PAL_007A_CHARACTER_NPC_ASSETS = Object.freeze([
-  ["PAL_TH_NPC_CARPENTER_01", "carpenter_idle_south_01", "CARPENTER"],
-  ["PAL_TH_NPC_FARMER_01", "farmer_idle_south_01", "FARMER"],
-  ["PAL_TH_NPC_MERCHANT_01", "merchant_idle_south_01", "MERCHANT"],
-  ["PAL_TH_NPC_ELDER_01", "elder_idle_south_01", "ELDER"],
-  ["PAL_TH_NPC_CHILD_01", "child_idle_south_01", "CHILD"],
-].map(([assetId, frame, visualRole]) => Object.freeze({
-  assetId,
-  pack: "PAL-007_CHARACTER_NPC",
-  family: "CHARACTER_NPC",
-  atlasId: "PAL_TH_CHARACTER_NPC_ATLAS_01",
-  frame,
-  visualRole,
-  deliveryStatus: "DELIVERED",
-  activationStatus: "DISABLED",
-  animationStatus: "STATIC_IDLE_FOUNDATION",
-  collisionPolicy: "NONE",
-  interactionPolicy: "VISUAL_ONLY",
-  aiPolicy: "DISABLED_UNTIL_NPC_RUNTIME_CONTRACT",
-  dialoguePolicy: "DISABLED_UNTIL_DIALOGUE_CONTRACT",
-  culturalReviewStatus: "FOUNDATION_APPROVED",
-}));
+export const PAL_007A_CHARACTER_NPC_ASSETS = Object.freeze(
+  [
+    ["PAL_TH_NPC_CARPENTER_01", "carpenter_idle_south_01", "CARPENTER"],
+    ["PAL_TH_NPC_FARMER_01", "farmer_idle_south_01", "FARMER"],
+    ["PAL_TH_NPC_MERCHANT_01", "merchant_idle_south_01", "MERCHANT"],
+    ["PAL_TH_NPC_ELDER_01", "elder_idle_south_01", "ELDER"],
+    ["PAL_TH_NPC_CHILD_01", "child_idle_south_01", "CHILD"],
+  ].map(([assetId, frame, visualRole]) =>
+    Object.freeze({
+      assetId,
+      pack: "PAL-007_CHARACTER_NPC",
+      family: "CHARACTER_NPC",
+      atlasId: "PAL_TH_CHARACTER_NPC_ATLAS_01",
+      frame,
+      visualRole,
+      deliveryStatus: "DELIVERED",
+      activationStatus: "DISABLED",
+      animationStatus: "STATIC_IDLE_FOUNDATION",
+      collisionPolicy: "NONE",
+      interactionPolicy: "VISUAL_ONLY",
+      aiPolicy: "DISABLED_UNTIL_NPC_RUNTIME_CONTRACT",
+      dialoguePolicy: "DISABLED_UNTIL_DIALOGUE_CONTRACT",
+      culturalReviewStatus: "FOUNDATION_APPROVED",
+    }),
+  ),
+);
 
 export function summarizePal007aCharacterNpcDelivery() {
   return {
