@@ -38,6 +38,7 @@ import "./sandbox/scenes/BuildersValleyWaterEffectsAssetPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentProductionPolishPatch.js";
 import "./sandbox/scenes/BuildersValleyProductionEnvironmentConsolidationPatch.js";
 import "./sandbox/scenes/BuildersValleySpawnSafetyPatch.js";
+import "./sandbox/scenes/BuildersValleyEnvironmentReleaseCandidatePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
 try {
