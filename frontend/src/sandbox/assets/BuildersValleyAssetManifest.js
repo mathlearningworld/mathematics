@@ -1,7 +1,7 @@
 export const BUILDERS_VALLEY_ASSET_PIPELINE_STANDARD =
   "BUILDERS_VALLEY_PRODUCTION_ASSET_PIPELINE_V1";
 
-export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V4";
+export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V5";
 
 export const BUILDERS_VALLEY_ASSET_FAMILIES = Object.freeze([
   "GROUND",
@@ -90,10 +90,13 @@ export const BUILDERS_VALLEY_ASSETS = Object.freeze([
     id: "BV_VEGETATION_ATLAS_01",
     family: "VEGETATION",
     sourceType: "ATLAS",
-    textureUrl: "/assets/builders-valley/vegetation/vegetation-atlas.png",
+    textureUrl: "/assets/builders-valley/vegetation/vegetation-atlas.svg",
     dataUrl: "/assets/builders-valley/vegetation/vegetation-atlas.json",
     layer: "environment",
-    replacementTarget: "forest pockets and foreground framing",
+    enabled: true,
+    required: true,
+    fallbackOwner: "BuildersValleyVegetationCompositionRuntimePatch",
+    replacementTarget: "forest pockets, river-bank growth and foreground framing",
   }),
   asset({
     id: "BV_PROP_ATLAS_01",
