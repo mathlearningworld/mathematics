@@ -41,6 +41,7 @@ import "./sandbox/scenes/BuildersValleyProductionEnvironmentConsolidationPatch.j
 import "./sandbox/scenes/BuildersValleySpawnSafetyPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentReleaseCandidatePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
+import "./sandbox/scenes/BuildersValleyTerrainAuthorityPatch.js";
 
 try {
   const params = new URLSearchParams(window.location.search);
