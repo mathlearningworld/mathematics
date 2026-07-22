@@ -1,0 +1,20 @@
+{
+  "frames": {
+    "tree_broadleaf_01": { "frame": { "x": 0, "y": 0, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "tree_broadleaf_02": { "frame": { "x": 64, "y": 0, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "shrub_01": { "frame": { "x": 128, "y": 0, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "shrub_02": { "frame": { "x": 192, "y": 0, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "reeds_01": { "frame": { "x": 0, "y": 64, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "flower_patch_01": { "frame": { "x": 64, "y": 64, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "moss_rock_01": { "frame": { "x": 128, "y": 64, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } },
+    "foreground_cluster_01": { "frame": { "x": 192, "y": 64, "w": 64, "h": 64 }, "rotated": false, "trimmed": false, "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 }, "sourceSize": { "w": 64, "h": 64 } }
+  },
+  "meta": {
+    "app": "Math Learning World Builders Valley",
+    "version": "PES-004A_V1",
+    "image": "vegetation-atlas.svg",
+    "format": "RGBA8888",
+    "size": { "w": 256, "h": 128 },
+    "scale": "1"
+  }
+}
