@@ -32,6 +32,7 @@ import "./sandbox/scenes/BuildersValleyTerrainDetailRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyWorkshopDetailRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyVegetationCompositionRuntimePatch.js";
 import "./sandbox/scenes/BuildersValleyLightingAtmosphereRuntimePatch.js";
+import "./sandbox/scenes/BuildersValleyProductionEnvironmentConsolidationPatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
 try {
