@@ -12,6 +12,7 @@
     "verify:builders-valley-assets": "node scripts/verify-builders-valley-assets.mjs",
     "verify:builders-valley-environment-rc": "node scripts/verify-builders-valley-environment-rc.mjs",
     "verify:builders-valley-visible-graphics": "node scripts/verify-builders-valley-visible-graphics.mjs",
+    "verify:builders-valley-scene-composition": "node scripts/verify-builders-valley-scene-composition.mjs",
     "verify:production-asset-library": "node scripts/verify-production-asset-library.mjs",
     "verify:pal-preview": "node scripts/verify-pal-preview.mjs",
     "verify:pal-thai-buildings": "node scripts/verify-pal-thai-buildings.mjs",
