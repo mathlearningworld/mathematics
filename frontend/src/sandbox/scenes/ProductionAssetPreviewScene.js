@@ -1,13 +1,12 @@
 import Phaser from "phaser";
 import {
   PAL_001A_DELIVERY_STANDARD,
-  PAL_001A_DELIVERIES,
+  PAL_001A_DELIVERED_ASSETS,
   PAL_001A_ATLASES,
 } from "../assets/Pal001ThaiNatureDeliveryManifest.js";
 
 const SCENE_KEY = "ProductionAssetPreviewScene";
 const PREVIEW_BACKGROUND = 0xf4efe2;
-const GRID_SIZE = 128;
 
 export class ProductionAssetPreviewScene extends Phaser.Scene {
   constructor() {
@@ -20,7 +19,7 @@ export class ProductionAssetPreviewScene extends Phaser.Scene {
 
   preload() {
     for (const atlas of PAL_001A_ATLASES) {
-      this.load.atlas(atlas.textureKey, atlas.textureUrl, atlas.dataUrl);
+      this.load.atlas(atlas.id, atlas.textureUrl, atlas.dataUrl);
     }
   }
 
@@ -62,7 +61,7 @@ export class ProductionAssetPreviewScene extends Phaser.Scene {
     const startY = 155;
     const columns = 4;
 
-    PAL_001A_DELIVERIES.forEach((record, index) => {
+    PAL_001A_DELIVERED_ASSETS.forEach((record, index) => {
       const column = index % columns;
       const row = Math.floor(index / columns);
       const x = startX + column * 220;
@@ -71,10 +70,10 @@ export class ProductionAssetPreviewScene extends Phaser.Scene {
       const shadow = this.add.ellipse(x, y + 53, 84, 18, 0x2a2018, 0.18);
       shadow.setData("previewShadow", true);
 
-      const sprite = this.add.image(x, y, record.textureKey, record.frame);
+      const sprite = this.add.image(x, y, record.atlasId, record.frame);
       sprite.setOrigin(0.5, 0.82);
       sprite.setData("assetId", record.assetId);
-      sprite.setData("deliveryId", record.deliveryId);
+      sprite.setData("atlasId", record.atlasId);
       this.previewSprites.push(sprite);
 
       const label = this.add.text(x, y + 77, `${record.assetId}\n${record.frame}`, {
@@ -123,7 +122,7 @@ export class ProductionAssetPreviewScene extends Phaser.Scene {
         standard: "PAL_001B_RUNTIME_PREVIEW_V1",
         deliveryStandard: PAL_001A_DELIVERY_STANDARD,
         sceneKey: SCENE_KEY,
-        assetCount: PAL_001A_DELIVERIES.length,
+        assetCount: PAL_001A_DELIVERED_ASSETS.length,
         atlasCount: PAL_001A_ATLASES.length,
         spriteCount: this.previewSprites.length,
         textureCount: this.textures.getTextureKeys().length,
@@ -137,9 +136,11 @@ export class ProductionAssetPreviewScene extends Phaser.Scene {
       showPack: (pack) => ({
         pack,
         supported: pack === "PAL-001_THAI_NATURE",
-        visibleAssetIds: PAL_001A_DELIVERIES.map((record) => record.assetId),
+        visibleAssetIds: PAL_001A_DELIVERED_ASSETS.map((record) => record.assetId),
       }),
-      returnToBuildersValley: () => this.scene.start("BuildersValleyScene"),
+      returnToBuildersValley: () => {
+        window.location.search = "";
+      },
     };
   }
 }
