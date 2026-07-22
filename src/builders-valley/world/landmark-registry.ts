@@ -11,6 +11,12 @@ export class LandmarkRegistry {
     this.registrations.set(registration.id, registration);
   }
 
+  unregister(id: string): LandmarkRuntimeRegistration | undefined {
+    const registration = this.registrations.get(id);
+    this.registrations.delete(id);
+    return registration;
+  }
+
   get(id: string): LandmarkRuntimeRegistration | undefined {
     return this.registrations.get(id);
   }
