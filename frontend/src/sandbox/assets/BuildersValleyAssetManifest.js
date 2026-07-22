@@ -1,7 +1,7 @@
 export const BUILDERS_VALLEY_ASSET_PIPELINE_STANDARD =
   "BUILDERS_VALLEY_PRODUCTION_ASSET_PIPELINE_V1";
 
-export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V5";
+export const BUILDERS_VALLEY_ASSET_MANIFEST_VERSION = "PES-001C_MANIFEST_V6";
 
 export const BUILDERS_VALLEY_ASSET_FAMILIES = Object.freeze([
   "GROUND",
@@ -111,9 +111,12 @@ export const BUILDERS_VALLEY_ASSETS = Object.freeze([
     id: "BV_EFFECT_WATER_ATLAS_01",
     family: "EFFECT",
     sourceType: "ATLAS",
-    textureUrl: "/assets/builders-valley/effects/water-effects-atlas.png",
+    textureUrl: "/assets/builders-valley/effects/water-effects-atlas.svg",
     dataUrl: "/assets/builders-valley/effects/water-effects-atlas.json",
     layer: "environment",
+    enabled: true,
+    required: true,
+    fallbackOwner: "BuildersValleyProductionDepthPassPatch",
     replacementTarget: "waterfall spray, foam and environmental effects",
   }),
 ]);
