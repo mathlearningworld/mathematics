@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Product entry point.
  * Fraction Bridge remains available as an archived learning-mechanic prototype;
  * the default client now boots the Builder's Valley sandbox.
