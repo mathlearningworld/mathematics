@@ -56,10 +56,24 @@ function createBridgePolish(scene) {
   graphics.fillStyle(0x3d281d, 0.34);
   graphics.fillRect(x, y + 40, STREAM.width + 136, 15);
   graphics.lineStyle(3, 0x6e4328, 0.82);
+
+  const startX = x + 18;
+  const startY = y + 5;
+  const controlX = x + STREAM.width / 2 + 68;
+  const controlY = y + 28;
+  const endX = x + STREAM.width + 118;
+  const endY = y + 5;
   graphics.beginPath();
-  graphics.moveTo(x + 18, y + 5);
-  graphics.quadraticBezierTo(x + STREAM.width / 2 + 68, y + 28, x + STREAM.width + 118, y + 5);
+  graphics.moveTo(startX, startY);
+  for (let step = 1; step <= 16; step += 1) {
+    const t = step / 16;
+    const inverse = 1 - t;
+    const px = inverse * inverse * startX + 2 * inverse * t * controlX + t * t * endX;
+    const py = inverse * inverse * startY + 2 * inverse * t * controlY + t * t * endY;
+    graphics.lineTo(px, py);
+  }
   graphics.strokePath();
+
   graphics.lineStyle(2, 0x2f211b, 0.58);
   [0, 1, 2, 3, 4, 5].forEach((index) => {
     const px = x + 34 + index * ((STREAM.width + 70) / 5);
