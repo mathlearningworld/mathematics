@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "verify:builders-valley-assets": "node scripts/verify-builders-valley-assets.mjs",
     "verify:builders-valley-environment-rc": "node scripts/verify-builders-valley-environment-rc.mjs",
-    "verify:production-asset-library": "node scripts/verify-production-asset-library.mjs"
+    "verify:production-asset-library": "node scripts/verify-production-asset-library.mjs",
+    "verify:pal-preview": "node scripts/verify-pal-preview.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"
