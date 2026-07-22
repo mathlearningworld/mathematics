@@ -34,6 +34,15 @@ export {
 } from './ports';
 
 export {
+  projectBridgeCrossing,
+  type BridgeCrossingAvailableAction,
+  type BridgeCrossingObjective,
+  type BridgeCrossingProjection,
+  type BridgeCrossingUiState,
+  type BridgeCrossingViewModel,
+} from './projection';
+
+export {
   createBridgeCrossingCompletionVerifier,
   createBridgeCrossingInteractionRuntime,
   createBridgeCrossingRegistration,
