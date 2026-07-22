@@ -18,11 +18,22 @@ export async function createBuildersValleyWorldRuntime(
   return {
     bridgeCrossing,
     async start() {
+      if (root.landmarkLoader.isLoaded(bridgeCrossing.registration.id)) {
+        return;
+      }
+
       stopBridgeInteraction = bridgeCrossing.interaction.start();
-      await root.landmarkLoader.load({
-        registration: bridgeCrossing.registration,
-        stop: stopBridgeInteraction,
-      });
+
+      try {
+        await root.landmarkLoader.load({
+          registration: bridgeCrossing.registration,
+          stop: stopBridgeInteraction,
+        });
+      } catch (error) {
+        stopBridgeInteraction();
+        stopBridgeInteraction = undefined;
+        throw error;
+      }
     },
     async stop() {
       await root.landmarkLoader.unload(bridgeCrossing.registration.id);
