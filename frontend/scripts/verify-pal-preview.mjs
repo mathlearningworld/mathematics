@@ -3,8 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   PAL_001A_ATLASES,
-  PAL_001A_DELIVERIES,
+  PAL_001A_DELIVERED_ASSETS,
 } from "../src/sandbox/assets/Pal001ThaiNatureDeliveryManifest.js";
+import { PRODUCTION_ASSET_LIBRARY } from "../src/sandbox/assets/ProductionAssetLibraryManifest.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,27 +32,32 @@ assert(bootstrapSource.includes("ProductionAssetPreviewScene"), "preview bootstr
 assert(mainSource.includes('params.get("palPreview") === "1"'), "PAL preview query route missing");
 assert(mainSource.includes("createSandboxGame()"), "Builders Valley default boot missing");
 
-const atlasKeys = new Set();
+const atlasIds = new Set();
 for (const atlas of PAL_001A_ATLASES) {
-  assert(!atlasKeys.has(atlas.textureKey), `duplicate atlas texture key: ${atlas.textureKey}`);
-  atlasKeys.add(atlas.textureKey);
-  assert(fs.existsSync(path.join(frontendRoot, "public", atlas.textureUrl.replace(/^\//, ""))), `${atlas.textureKey}: texture missing`);
-  assert(fs.existsSync(path.join(frontendRoot, "public", atlas.dataUrl.replace(/^\//, ""))), `${atlas.textureKey}: atlas data missing`);
+  assert(!atlasIds.has(atlas.id), `duplicate atlas id: ${atlas.id}`);
+  atlasIds.add(atlas.id);
+  assert(fs.existsSync(path.join(frontendRoot, "public", atlas.textureUrl.replace(/^\//, ""))), `${atlas.id}: texture missing`);
+  assert(fs.existsSync(path.join(frontendRoot, "public", atlas.dataUrl.replace(/^\//, ""))), `${atlas.id}: atlas data missing`);
 }
 
+const sourceById = new Map(PRODUCTION_ASSET_LIBRARY.map((record) => [record.id, record]));
 const frameKeys = new Set();
-for (const delivery of PAL_001A_DELIVERIES) {
-  const key = `${delivery.textureKey}:${delivery.frame}`;
+for (const delivery of PAL_001A_DELIVERED_ASSETS) {
+  const key = `${delivery.atlasId}:${delivery.frame}`;
+  const source = sourceById.get(delivery.assetId);
   assert(!frameKeys.has(key), `duplicate preview frame mapping: ${key}`);
   frameKeys.add(key);
-  assert(atlasKeys.has(delivery.textureKey), `${delivery.deliveryId}: unknown texture key ${delivery.textureKey}`);
-  assert(delivery.activationStatus === "DISABLED", `${delivery.deliveryId}: Builders Valley activation must remain disabled`);
-  assert(delivery.collisionPolicy === "NONE", `${delivery.deliveryId}: preview asset must remain collision-free`);
+  assert(atlasIds.has(delivery.atlasId), `${delivery.assetId}: unknown atlas id ${delivery.atlasId}`);
+  assert(delivery.deliveryStatus === "DELIVERED", `${delivery.assetId}: delivery status must be DELIVERED`);
+  assert(delivery.activationStatus === "DISABLED", `${delivery.assetId}: Builders Valley activation must remain disabled`);
+  assert(Boolean(source), `${delivery.assetId}: production asset library source missing`);
+  assert(source?.collisionPolicy === "NONE", `${delivery.assetId}: preview asset must remain collision-free`);
+  assert(source?.interactionPolicy === "DECORATIVE_ONLY", `${delivery.assetId}: preview asset must remain decorative-only`);
 }
 
 console.log("PAL-001B Runtime Preview verification");
 console.log(`Atlases: ${PAL_001A_ATLASES.length}`);
-console.log(`Preview assets: ${PAL_001A_DELIVERIES.length}`);
+console.log(`Preview assets: ${PAL_001A_DELIVERED_ASSETS.length}`);
 console.log("Route: ?palPreview=1");
 
 if (failures.length > 0) {
