@@ -41,6 +41,7 @@ import "./sandbox/scenes/BuildersValleyProductionEnvironmentConsolidationPatch.j
 import "./sandbox/scenes/BuildersValleySpawnSafetyPatch.js";
 import "./sandbox/scenes/BuildersValleyVisibleGraphicsIntegrationPatch.js";
 import "./sandbox/scenes/BuildersValleySceneCompositionPatch.js";
+import "./sandbox/scenes/BuildersValleyEnvironmentArtistPassPatch.js";
 import "./sandbox/scenes/BuildersValleyEnvironmentReleaseCandidatePatch.js";
 import "./sandbox/scenes/BuildersValleyAssetDebugPatch.js";
 
