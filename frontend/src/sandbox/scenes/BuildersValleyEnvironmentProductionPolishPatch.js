@@ -3,173 +3,164 @@ import { STREAM, TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../config/worldCon
 
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
-const STANDARD = "BUILDERS_VALLEY_PES_005C_ENVIRONMENT_PRODUCTION_POLISH_V1";
+const STANDARD = "BUILDERS_VALLEY_PES_005C1_PRODUCTION_POLISH_CALIBRATION_V1";
 
 const PASSES = Object.freeze([
-  Object.freeze({ id: "ground-micro-variation", status: "ACTIVE", purpose: "break uniform grass with restrained soil, leaf and pebble accents" }),
-  Object.freeze({ id: "river-edge-polish", status: "ACTIVE", purpose: "strengthen bank depth with moss, contact shade and irregular edge accents" }),
-  Object.freeze({ id: "workshop-living-detail", status: "ACTIVE", purpose: "add subtle operational traces without crowding interaction space" }),
-  Object.freeze({ id: "forest-density-calibration", status: "ACTIVE", purpose: "connect vegetation pockets while preserving the path corridor" }),
-  Object.freeze({ id: "color-and-noise-calibration", status: "ACTIVE", purpose: "guide focus toward waterfall, bridge and workshop" }),
+  Object.freeze({ id: "ground-noise-reduction", status: "ACTIVE", purpose: "retain broad terrain variation while removing scattered micro-noise" }),
+  Object.freeze({ id: "hud-safe-foreground-cleanup", status: "ACTIVE", purpose: "keep the lower HUD corridor visually quiet and readable" }),
+  Object.freeze({ id: "workshop-clutter-balance", status: "ACTIVE", purpose: "concentrate operational traces around authored work zones" }),
+  Object.freeze({ id: "lower-river-edge-cleanup", status: "ACTIVE", purpose: "simplify lower-bank accents into a restrained edge rhythm" }),
+  Object.freeze({ id: "global-value-calibration", status: "ACTIVE", purpose: "reduce empty-field brightness and preserve waterfall bridge workshop focus" }),
 ]);
 
-function drawGroundMicroVariation(scene) {
+function drawGroundCalibration(scene) {
   const graphics = scene.add.graphics().setDepth(-21);
 
-  graphics.fillStyle(0x4f8b47, 0.17);
+  graphics.fillStyle(0x4a8144, 0.13);
   [
-    [9 * TILE_SIZE, 5 * TILE_SIZE, 118, 44],
-    [16 * TILE_SIZE, 11 * TILE_SIZE, 92, 34],
-    [7 * TILE_SIZE, 20 * TILE_SIZE, 110, 38],
-    [24 * TILE_SIZE, 24 * TILE_SIZE, 104, 36],
-    [41 * TILE_SIZE, 8 * TILE_SIZE, 96, 34],
+    [9 * TILE_SIZE, 5 * TILE_SIZE, 126, 46],
+    [16 * TILE_SIZE, 11 * TILE_SIZE, 102, 36],
+    [7 * TILE_SIZE, 20 * TILE_SIZE, 118, 40],
+    [40 * TILE_SIZE, 8 * TILE_SIZE, 104, 36],
   ].forEach(([x, y, width, height]) => graphics.fillEllipse(x, y, width, height));
 
-  graphics.fillStyle(0x7f7448, 0.18);
+  graphics.fillStyle(0x776d47, 0.13);
   [
-    [12 * TILE_SIZE, 14 * TILE_SIZE, 72, 18],
-    [18 * TILE_SIZE, 16 * TILE_SIZE, 84, 20],
-    [29 * TILE_SIZE, 19 * TILE_SIZE, 78, 18],
-    [38 * TILE_SIZE, 22 * TILE_SIZE, 92, 20],
+    [12 * TILE_SIZE, 14 * TILE_SIZE, 78, 18],
+    [18 * TILE_SIZE, 16 * TILE_SIZE, 88, 20],
+    [29 * TILE_SIZE, 19 * TILE_SIZE, 82, 18],
   ].forEach(([x, y, width, height]) => graphics.fillEllipse(x, y, width, height));
 
-  graphics.fillStyle(0xb39a63, 0.42);
+  graphics.fillStyle(0xb39a63, 0.3);
   [
-    [206, 338], [278, 270], [356, 434], [470, 184], [532, 514],
-    [1268, 224], [1376, 354], [1452, 520], [310, 690], [1260, 728],
+    [278, 270], [470, 184], [1268, 224], [1376, 354],
   ].forEach(([x, y]) => graphics.fillRect(x, y, 4, 2));
 
-  graphics.fillStyle(0x8b6440, 0.34);
-  [
-    [238, 384], [420, 238], [556, 444], [1328, 286], [1436, 648], [268, 752],
-  ].forEach(([x, y]) => graphics.fillRect(x, y, 5, 3));
-
-  return { object: graphics, accentCount: 25 };
+  return { object: graphics, accentCount: 11 };
 }
 
-function drawRiverEdgePolish(scene) {
+function drawRiverEdgeCalibration(scene) {
   const graphics = scene.add.graphics().setDepth(37);
   const left = STREAM.left;
   const right = STREAM.left + STREAM.width;
 
-  graphics.fillStyle(0x1f3430, 0.2);
+  graphics.fillStyle(0x1f3430, 0.17);
   [
     [left - 18, 348, 34, 12],
     [right + 16, 404, 32, 11],
     [left - 12, 528, 28, 10],
     [right + 14, 566, 30, 10],
-    [left - 16, 724, 36, 12],
-    [right + 18, 778, 34, 11],
   ].forEach(([x, y, width, height]) => graphics.fillEllipse(x, y, width, height));
 
-  graphics.fillStyle(0x61734d, 0.72);
+  graphics.fillStyle(0x61734d, 0.58);
   [
     [left - 25, 392, 20, 7],
     [right + 22, 468, 18, 7],
     [left - 20, 642, 22, 7],
-    [right + 24, 700, 19, 7],
   ].forEach(([x, y, width, height]) => graphics.fillEllipse(x, y, width, height));
 
-  graphics.lineStyle(2, 0x30453a, 0.56);
+  graphics.lineStyle(2, 0x30453a, 0.44);
   [
     [left - 28, 438, left - 22, 424],
-    [left - 21, 438, left - 16, 421],
     [right + 24, 610, right + 18, 594],
-    [right + 31, 610, right + 27, 592],
   ].forEach(([x1, y1, x2, y2]) => graphics.lineBetween(x1, y1, x2, y2));
 
-  return { object: graphics, accentCount: 14 };
+  return { object: graphics, accentCount: 9 };
 }
 
-function drawWorkshopLivingDetail(scene) {
+function drawWorkshopCalibration(scene) {
   const graphics = scene.add.graphics().setDepth(233);
   const originX = STREAM.left + STREAM.width + 74;
   const originY = 528;
 
-  graphics.fillStyle(0x3f2d20, 0.2);
+  graphics.fillStyle(0x3f2d20, 0.17);
   [
     [originX + 46, originY + 112, 44, 12],
     [originX + 126, originY + 138, 54, 14],
-    [originX + 210, originY + 100, 38, 11],
   ].forEach(([x, y, width, height]) => graphics.fillEllipse(x, y, width, height));
 
-  graphics.fillStyle(0xc69a55, 0.62);
+  graphics.fillStyle(0xc69a55, 0.5);
   [
     [originX + 28, originY + 104, 8, 3],
-    [originX + 38, originY + 109, 6, 3],
     [originX + 92, originY + 134, 9, 3],
     [originX + 146, originY + 118, 7, 3],
-    [originX + 192, originY + 142, 8, 3],
   ].forEach(([x, y, width, height]) => graphics.fillRect(x, y, width, height));
 
-  graphics.lineStyle(2, 0x675238, 0.55);
+  graphics.lineStyle(2, 0x675238, 0.42);
   [
     [originX + 66, originY + 150, originX + 82, originY + 154],
     [originX + 156, originY + 154, originX + 174, originY + 151],
-    [originX + 218, originY + 128, originX + 231, originY + 135],
   ].forEach(([x1, y1, x2, y2]) => graphics.lineBetween(x1, y1, x2, y2));
 
-  return { object: graphics, accentCount: 11 };
+  return { object: graphics, accentCount: 7 };
 }
 
-function drawForestCalibration(scene) {
-  const graphics = scene.add.graphics().setDepth(29);
+function drawHudSafeCleanup(scene) {
+  const graphics = scene.add.graphics().setDepth(388);
 
-  graphics.fillStyle(0x244a35, 0.075);
-  graphics.fillEllipse(192, 190, 420, 230);
-  graphics.fillEllipse(436, 122, 270, 150);
-  graphics.fillEllipse(WORLD_WIDTH - 168, 156, 300, 170);
+  graphics.fillStyle(0x10251d, 0.035);
+  graphics.fillRect(0, WORLD_HEIGHT - 150, WORLD_WIDTH, 150);
 
-  graphics.fillStyle(0x173b2b, 0.06);
-  graphics.fillEllipse(94, 92, 220, 140);
-  graphics.fillEllipse(WORLD_WIDTH - 88, 94, 210, 136);
+  graphics.fillStyle(0x173226, 0.045);
+  graphics.fillEllipse(42, WORLD_HEIGHT - 126, 170, 86);
+  graphics.fillEllipse(WORLD_WIDTH - 42, WORLD_HEIGHT - 124, 164, 82);
+
+  return { object: graphics, accentCount: 3 };
+}
+
+function drawGlobalValueCalibration(scene) {
+  const graphics = scene.add.graphics().setDepth(389);
+
+  graphics.fillStyle(0x10231c, 0.03);
+  graphics.fillRect(0, 0, 132, WORLD_HEIGHT);
+  graphics.fillRect(WORLD_WIDTH - 132, 0, 132, WORLD_HEIGHT);
+
+  graphics.fillStyle(0x173126, 0.018);
+  graphics.fillRect(0, 0, WORLD_WIDTH, 86);
+
+  graphics.fillStyle(0x203d2e, 0.018);
+  graphics.fillRect(0, 86, WORLD_WIDTH, WORLD_HEIGHT - 236);
+
+  graphics.fillStyle(0xf1b85a, 0.02);
+  graphics.fillEllipse(STREAM.left + STREAM.width + 190, 610, 310, 210);
 
   return { object: graphics, accentCount: 5 };
 }
 
-function drawColorAndNoiseCalibration(scene) {
-  const graphics = scene.add.graphics().setDepth(389);
-
-  graphics.fillStyle(0x0d211b, 0.035);
-  graphics.fillRect(0, 0, 110, WORLD_HEIGHT);
-  graphics.fillRect(WORLD_WIDTH - 110, 0, 110, WORLD_HEIGHT);
-
-  graphics.fillStyle(0x153126, 0.025);
-  graphics.fillRect(0, 0, WORLD_WIDTH, 72);
-
-  graphics.fillStyle(0xf1b85a, 0.025);
-  graphics.fillEllipse(STREAM.left + STREAM.width + 190, 610, 330, 230);
-
-  return { object: graphics, accentCount: 4 };
-}
-
 function installEnvironmentProductionPolish(scene) {
-  const ground = drawGroundMicroVariation(scene);
-  const river = drawRiverEdgePolish(scene);
-  const workshop = drawWorkshopLivingDetail(scene);
-  const forest = drawForestCalibration(scene);
-  const calibration = drawColorAndNoiseCalibration(scene);
+  const previousRuntime = scene.__environmentProductionPolishRuntime;
+  if (previousRuntime?.objects) {
+    Object.values(previousRuntime.objects).forEach((object) => object?.destroy?.());
+  }
+
+  const ground = drawGroundCalibration(scene);
+  const river = drawRiverEdgeCalibration(scene);
+  const workshop = drawWorkshopCalibration(scene);
+  const hudSafe = drawHudSafeCleanup(scene);
+  const value = drawGlobalValueCalibration(scene);
 
   const runtime = {
     standard: STANDARD,
     status: "ACTIVE",
-    productionPhase: "PES-005C",
-    polishModel: "RESTRAINED_MULTI_ZONE_PRODUCTION_CALIBRATION",
+    productionPhase: "PES-005C.1",
+    polishModel: "RESTRAINED_NOISE_REDUCTION_AND_VALUE_CALIBRATION",
     passes: PASSES,
     accentCount:
       ground.accentCount +
       river.accentCount +
       workshop.accentCount +
-      forest.accentCount +
-      calibration.accentCount,
+      hudSafe.accentCount +
+      value.accentCount,
+    previousAccentCount: previousRuntime?.accentCount ?? 0,
+    hudSafeLowerBand: WORLD_HEIGHT - 150,
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
     objects: {
       ground: ground.object,
       river: river.object,
       workshop: workshop.object,
-      forest: forest.object,
-      calibration: calibration.object,
+      hudSafe: hudSafe.object,
+      value: value.object,
     },
   };
 
@@ -182,6 +173,8 @@ function installEnvironmentProductionPolish(scene) {
     polishModel: runtime.polishModel,
     passes: runtime.passes.map((pass) => ({ ...pass })),
     accentCount: runtime.accentCount,
+    previousAccentCount: runtime.previousAccentCount,
+    hudSafeLowerBand: runtime.hudSafeLowerBand,
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
   });
