@@ -119,6 +119,7 @@ function installProductionDepthPass(scene) {
   const updateHandler = (_time, delta) => {
     elapsed += delta / 1000;
     waterFx.forEach((item) => {
+      if (!item.visible) return;
       const anchorX = item.getData("anchorX");
       const phase = item.getData("phase");
       item.x = anchorX + Math.sin(elapsed * 0.75 + phase) * 2.5;
@@ -138,6 +139,13 @@ function installProductionDepthPass(scene) {
     animatedElementCount: waterFx.length,
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
+    objects: {
+      cliff: cliff.object,
+      waterFx,
+      bridge: bridge.object,
+      workshop: workshop.object,
+      framing: framing.object,
+    },
   };
 
   scene.__productionDepthPassRuntime = runtime;
@@ -150,6 +158,7 @@ function installProductionDepthPass(scene) {
     phases: runtime.phases.map((phase) => ({ ...phase })),
     accentCount: runtime.accentCount,
     animatedElementCount: runtime.animatedElementCount,
+    waterFallbackVisible: runtime.objects.waterFx.some((item) => item.visible),
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
   });
