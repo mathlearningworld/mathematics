@@ -13,3 +13,9 @@ export {
   type BridgeCrossingInteractionOptions,
   type BridgeCrossingInteractionRuntime,
 } from './bridge-crossing-interaction';
+
+export {
+  createBridgeCrossingRuntimeBundle,
+  type BridgeCrossingRuntimeBundle,
+  type BridgeCrossingRuntimeFactoryOptions,
+} from './bridge-crossing-runtime-factory';
