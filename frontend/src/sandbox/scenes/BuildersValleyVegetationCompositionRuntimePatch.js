@@ -9,7 +9,7 @@ import {
 const prototype = BuildersValleyScene.prototype;
 const originalCreate = prototype.create;
 
-const STANDARD = "BUILDERS_VALLEY_PES_002F_VEGETATION_COMPOSITION_RUNTIME_V1";
+const STANDARD = "BUILDERS_VALLEY_PES_002F_VEGETATION_COMPOSITION_RUNTIME_V2";
 const KIT_ID = "BV_ENVIRONMENT_KIT_FOREST_01";
 
 const ZONES = Object.freeze([
@@ -90,7 +90,6 @@ function composeVegetation(scene) {
   const frontForeground = scene.add.container(0, 0).setDepth(322);
   let elementCount = 0;
 
-  // Upper-left canopy: dense but kept well away from the authored path corridor.
   elementCount += addCanopyShadow(scene, midBack, 260, 170, 310, 180, 0.11);
   elementCount += addCanopyCluster(scene, midBack, 95, 118, 1.08, 0, 0.98);
   elementCount += addCanopyCluster(scene, midBack, 220, 92, 0.82, 1, 0.96);
@@ -99,12 +98,10 @@ function composeVegetation(scene) {
   elementCount += addShrubCluster(scene, foreground, 315, 270, 0.82, 0);
   elementCount += addFlowerPatch(scene, foreground, 250, 302, 0);
 
-  // Waterfall rim: vegetation mass frames the dark gorge while retaining the water mouth.
   elementCount += addCanopyShadow(scene, midBack, STREAM.left + STREAM.width / 2, 74, 360, 100, 0.1);
   elementCount += addCanopyCluster(scene, midBack, STREAM.left - 82, 72, 0.66, 1, 0.92);
   elementCount += addCanopyCluster(scene, midBack, STREAM.left + STREAM.width + 84, 78, 0.7, 0, 0.92);
 
-  // River-bank growth: sparse alternating reeds and low shrubs, never a continuous fence.
   const bankSamples = [7.5, 10.5, 20.5, 24.5];
   bankSamples.forEach((row, index) => {
     const y = row * TILE_SIZE;
@@ -116,11 +113,9 @@ function composeVegetation(scene) {
   elementCount += addShrubCluster(scene, foreground, STREAM.left - 72, 392, 0.68, 1);
   elementCount += addShrubCluster(scene, foreground, STREAM.left + STREAM.width + 62, 438, 0.62, 0);
 
-  // Bridge approach remains controlled: only low accents outside the protected crossing.
   elementCount += addFlowerPatch(scene, foreground, STREAM.left - 116, 596, 1);
   elementCount += addReedPatch(scene, foreground, STREAM.left + STREAM.width + 70, 600, true);
 
-  // Front foreground framing: edge-weighted silhouettes outside the central gameplay corridor.
   elementCount += addCanopyShadow(scene, frontForeground, 112, WORLD_HEIGHT - 8, 270, 120, 0.16);
   elementCount += addCanopyCluster(scene, frontForeground, 34, WORLD_HEIGHT - 12, 1.18, 1, 0.9);
   elementCount += addShrubCluster(scene, frontForeground, 182, WORLD_HEIGHT - 22, 1.02, 0);
@@ -134,13 +129,14 @@ function installVegetationCompositionRuntime(scene) {
   const runtime = {
     standard: STANDARD,
     kitId: KIT_ID,
-    status: "ACTIVE",
+    status: "ACTIVE_FOUNDATION",
     compositionModel: "ZONE_WEIGHTED_MULTI_LAYER_VEGETATION",
     zones: ZONES,
     layers: Object.freeze(["midBack", "foreground", "frontForeground"]),
     elementCount: composition.elementCount,
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
+    objects: composition,
   };
 
   scene.__vegetationCompositionRuntime = runtime;
@@ -153,17 +149,14 @@ function installVegetationCompositionRuntime(scene) {
     zones: runtime.zones.map((zone) => ({ ...zone })),
     layers: [...runtime.layers],
     elementCount: runtime.elementCount,
+    fallbackVisible: runtime.objects.midBack.visible || runtime.objects.foreground.visible || runtime.objects.frontForeground.visible,
     collisionObjectsAdded: 0,
     gameplayGeometryChanged: false,
   });
   window.__BUILDERS_VALLEY__.debugVegetationComposition = () => {
     const snapshot = window.__BUILDERS_VALLEY__.getVegetationCompositionRuntime();
     console.group("Builders Valley Vegetation Composition");
-    console.table(snapshot.zones.map((zone) => ({
-      zone: zone.id,
-      density: zone.density,
-      purpose: zone.purpose,
-    })));
+    console.table(snapshot.zones.map((zone) => ({ zone: zone.id, density: zone.density, purpose: zone.purpose })));
     console.log(snapshot);
     console.groupEnd();
     return snapshot;
