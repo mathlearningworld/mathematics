@@ -32,3 +32,13 @@ export {
   type BridgeCrossingClockPort,
   type BridgeCrossingSnapshotStorePort,
 } from './ports';
+
+export {
+  createBridgeCrossingCompletionVerifier,
+  createBridgeCrossingInteractionRuntime,
+  createBridgeCrossingRegistration,
+  type BridgeCrossingCompletionVerifier,
+  type BridgeCrossingInteractionOptions,
+  type BridgeCrossingInteractionRuntime,
+  type BridgeCrossingRegistrationOptions,
+} from './runtime';
